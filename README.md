@@ -1,72 +1,55 @@
 # DocuFlow
 
-Prémiová klientská webová aplikace pro generování českých smluv a dokumentů.
-Aplikace běží kompletně v prohlížeči (LocalStorage) — bez backendu.
+Prémiové české ERP + document workflow pro OSVČ, řemeslníky a firmy.
+Běží kompletně v prohlížeči (LocalStorage) s hybridní přípravou na Supabase a OpenAI.
 
-## Struktura (multi-file)
-
-```
-index.html                 # Vite entry HTML → /src/main.tsx
-vite.config.js             # Vite + React + SPA routing
-package.json               # scripts: dev / build / preview
-src/
-  main.tsx                 # Entry point
-  App.tsx                  # Router shell
-  index.css                # Global styles & theme
-  components/              # Logo, AppShell, SignaturePad, EmailModal
-  pages/                   # Dashboard, NewDocument, Templates, Settings
-  data/                    # Czech document templates
-  hooks/                   # LocalStorage document/settings hooks
-  types/                   # TypeScript models
-  utils/                   # PDF, print, mailto, storage, format
-public/
-  favicon.svg
-```
-
-## Spuštění na localhost
-
-Z kořene projektu:
+## Spuštění
 
 ```bash
 npm install
 npm run dev
 ```
 
-Otevřete v prohlížeči adresu, kterou Vite vypíše (typicky):
+Otevřete `http://localhost:5173/`
 
-```
-http://localhost:5173/
-```
-
-`npm run dev` spouští `vite --host`, takže je aplikace dostupná i v síti (Network URL).
-
-### OpenAI (volitelné)
-
-Bez klíče běží AI Asistent v chytré simulaci (1,5 s „AI přemýšlí…“ + mock právní text).
-
-Pro ostré generování:
+Volitelné `.env` (viz `.env.example`):
 
 ```bash
-cp .env.example .env
-# doplňte: VITE_OPENAI_API_KEY=sk-...
-npm run dev
+VITE_OPENAI_API_KEY=sk-...
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-### Build / preview
+## Architektura (`src/`)
 
-```bash
-npm run build
-npm run preview
+```
+App.tsx                 # Routing (vč. /sign/:id bez shellu)
+components/             # UI: ItemManager, AI, Auth, Signature…
+pages/
+  Dashboard.tsx         # Pipeline zakázek
+  ProjectDetail.tsx     # One-click convert + ARES + WhatsApp
+  Profile.tsx           # Můj Profil / Moje Firma
+  SignDocument.tsx      # Mobilní podpis + Smart-Faktura
+  AiAudit.tsx           # AI Právní Audit
+  NewDocument.tsx       # Klasický průvodce
+  Pricing.tsx           # Free / 390 / 890 / 1490
+hooks/                  # useAuth, useErp, useDocuments
+utils/
+  numbering.ts          # CN/SOD/F/PP 2026…
+  vat.ts                # 21% / 12% / 0%
+  workflow.ts           # Quote→Contract→Advance→Protocol→Final
+  ares.ts / ai.ts / legalAudit.ts / payments.ts / supabase.ts
+types/erp.ts            # Projekt, položky, DPH, workflow
 ```
 
-## Funkce
+## Klíčové funkce
 
-- **Nástěnka** s historií dokumentů v LocalStorage
-- **Auth + ceník**: Free (3 dok.) / Premium 390 Kč / Business 890 Kč / Enterprise 1490 Kč
-- **Vícekrokový průvodce**: šablona → strany → specifikace → podpisy
-- **České šablony**: předávací protokol, úřední žádost, smlouva o dílo, generální plná moc…
-- **ARES IČO lookup** s autofillem (mock fallback při CORS)
-- **AI Asistent** pro doplnění smluvních klauzulí
-- **HTML5 Canvas podpisy** (mobilní fullscreen modal)
-- **Akce**: Stáhnout PDF, Poslat e-mailem, Vytisknout
-- Responzivní layout + tmavý/světlý korporátní režim
+1. **Profil firmy** — IČO, DIČ, sídlo, účet → hlavička dokumentů  
+2. **Workflow** — Nabídka → Smlouva → Záloha → Předání → Doplatek + čísla `CN2026001`…  
+3. **DPH** — více řádků, 21 / 12 / 0 %, součty dle sazeb  
+4. **ARES** — načtení klienta (mock při CORS)  
+5. **WhatsApp** + `/sign/:id` canvas podpis  
+6. **Smart-Faktura** — QR Platba, Apple/Google Pay, Stripe (mock)  
+7. **AI Právní Audit** — OpenAI nebo simulace  
+8. **Paywall** — Free 3 dok. / Premium 390 / Business 890 / Enterprise 1490  
+9. **Supabase hybrid** — bez klíčů běží LocalStorage auth
