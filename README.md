@@ -40,6 +40,18 @@ http://localhost:5173/
 
 `npm run dev` spouští `vite --host`, takže je aplikace dostupná i v síti (Network URL).
 
+### OpenAI (volitelné)
+
+Bez klíče běží AI Asistent v chytré simulaci (1,5 s „AI přemýšlí…“ + mock právní text).
+
+Pro ostré generování:
+
+```bash
+cp .env.example .env
+# doplňte: VITE_OPENAI_API_KEY=sk-...
+npm run dev
+```
+
 ### Build / preview
 
 ```bash
