@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shoptet Data Cleaner</title>
+
+    <!-- Tailwind CSS (Play CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- SheetJS (xlsx) hosted on Cloudflare's cdnjs.
+         NOTE: the placeholder "https://cloudflare.com" in the brief is not a real
+         SheetJS build, so the real cdnjs URL below is used instead. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              neon: {
+                blue: "#38bdf8",
+                indigo: "#6366f1",
+                purple: "#a855f7",
+              },
+            },
+            boxShadow: {
+              glow: "0 0 40px -10px rgba(99, 102, 241, 0.7)",
+            },
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        background:
+          radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+          radial-gradient(1000px 500px at 110% 10%, rgba(168, 85, 247, 0.16), transparent 55%),
+          #020617;
+      }
+      .glass {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+      }
+      .gradient-text {
+        background: linear-gradient(90deg, #38bdf8, #6366f1, #a855f7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .dropzone-active {
+        border-color: #6366f1 !important;
+        background: rgba(99, 102, 241, 0.08) !important;
+        box-shadow: 0 0 40px -10px rgba(99, 102, 241, 0.7);
+      }
+      ::-webkit-scrollbar { height: 10px; width: 10px; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+      select option { background: #0f172a; }
+    </style>
+  </head>
+
+  <body class="min-h-screen text-slate-200 font-sans antialiased">
+    <!-- Header -->
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-11 w-11 rounded-xl bg-gradient-to-br from-neon-blue via-neon-indigo to-neon-purple shadow-glow flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="h-6 w-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="m3 12 9 4.5L21 12M3 16.5 12 21l9-4.5" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold gradient-text leading-tight">Shoptet Data Cleaner</h1>
+          <p class="text-xs text-slate-400">Vyčistěte a namapujte data pro import do Shoptetu</p>
+        </div>
+      </div>
+      <button id="pricingBtn" class="rounded-xl px-4 py-2 text-sm font-semibold text-white bg-white/5 hover:bg-white/10 border border-white/10 transition">
+        Předplatné
+      </button>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-24 space-y-8">
+      <!-- Hero / usage -->
+      <section class="glass rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Nahrajte tabulku produktů</h2>
+          <p class="text-sm text-slate-400">Podporované formáty: <span class="text-slate-200 font-medium">.xlsx</span> a <span class="text-slate-200 font-medium">.csv</span>. Vše probíhá lokálně ve vašem prohlížeči.</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs uppercase tracking-wide text-slate-500">Tarif Free</p>
+          <p class="text-sm text-slate-300"><span id="usageCount" class="text-white font-semibold">0</span> / 50 řádků tento měsíc</p>
+        </div>
+      </section>
+
+      <!-- Dropzone -->
+      <section>
+        <label id="dropzone"
+          class="block cursor-pointer rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/40 px-6 py-12 text-center transition hover:border-neon-indigo">
+          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+          <div class="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-neon-blue/20 to-neon-purple/20 flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" class="h-7 w-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V3m0 0L7.5 7.5M12 3l4.5 4.5" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 15v3.75A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V15" />
+            </svg>
+          </div>
+          <p class="text-base font-semibold text-white">Přetáhněte soubor sem</p>
+          <p class="text-sm text-slate-400 mt-1">nebo <span class="text-neon-indigo font-medium underline underline-offset-2">klikněte pro výběr</span></p>
+          <p id="fileName" class="text-xs text-slate-500 mt-3"></p>
+        </label>
+        <div class="mt-3 flex items-center justify-center gap-3">
+          <button id="sampleBtn" class="text-xs text-slate-400 hover:text-neon-indigo transition underline underline-offset-2">
+            Vyzkoušet ukázková data
+          </button>
+        </div>
+      </section>
+
+      <!-- Preview + Mapping (hidden until data loaded) -->
+      <section id="workspace" class="hidden space-y-8">
+        <!-- Preview -->
+        <div class="glass rounded-2xl overflow-hidden">
+          <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-white">Náhled dat</h3>
+              <p class="text-xs text-slate-400">Prvních 5 řádků z <span id="rowTotal" class="text-slate-200">0</span> nalezených.</p>
+            </div>
+            <span class="text-xs px-3 py-1 rounded-full bg-neon-indigo/15 text-indigo-300 border border-indigo-400/20">Náhled</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead id="previewHead" class="bg-white/5 text-slate-300"></thead>
+              <tbody id="previewBody" class="divide-y divide-white/5"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Smart Mapping -->
+        <div class="glass rounded-2xl p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-semibold text-white">Chytré mapování</h3>
+              <p class="text-xs text-slate-400">Sloupce jsme se pokusili spárovat automaticky. Upravte podle potřeby.</p>
+            </div>
+            <span id="autoBadge" class="text-xs px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/20">Auto-detekce</span>
+          </div>
+          <div id="mappingGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+          <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/10 pt-5">
+            <p id="mapSummary" class="text-xs text-slate-400"></p>
+            <button id="exportBtn"
+              class="w-full sm:w-auto rounded-xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-neon-blue via-neon-indigo to-neon-purple shadow-glow hover:opacity-95 active:scale-[0.99] transition disabled:opacity-40 disabled:cursor-not-allowed">
+              Exportovat pro Shoptet
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 hidden">
+      <div class="glass rounded-xl px-5 py-3 text-sm text-white shadow-glow flex items-center gap-2">
+        <span id="toastMsg"></span>
+      </div>
+    </div>
+
+    <!-- Pricing Modal -->
+    <div id="pricingModal" class="fixed inset-0 z-50 hidden">
+      <div id="pricingBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+      <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="glass rounded-2xl w-full max-w-md p-6 shadow-glow">
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white">Předplatné</h3>
+              <p class="text-sm text-slate-400">Odemkněte neomezené čištění dat.</p>
+            </div>
+            <button id="closePricing" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+
+          <div class="mt-5 rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 p-5">
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-extrabold text-white">390 Kč</span>
+              <span class="text-slate-400 text-sm">/ měsíc</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Tarif <span class="text-white font-semibold">Pro</span></p>
+
+            <ul class="mt-4 space-y-2 text-sm text-slate-300">
+              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Neomezený počet řádků a exportů</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Až <span class="text-white font-semibold">50 000 produktů</span> / měsíc</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Ukládání mapovacích šablon</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Prioritní podpora</li>
+            </ul>
+
+            <button id="subscribeBtn" class="mt-5 w-full rounded-xl px-5 py-3 font-semibold text-white bg-gradient-to-r from-neon-blue via-neon-indigo to-neon-purple shadow-glow hover:opacity-95 active:scale-[0.99] transition">
+              Aktivovat za 390 Kč / měsíc
+            </button>
+          </div>
+
+          <p class="text-[11px] text-slate-500 mt-4 text-center">Tarif Free je omezen na 50 řádků měsíčně. Toto je ukázkový billing.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+
+      // ---- Shoptet target fields --------------------------------------------
+      // `header` is the technical column name Shoptet expects on import.
+      const SHOPTET_FIELDS = [
+        { key: "code", label: "Kód produktu", header: "code", keywords: ["kod", "code", "sku", "id produktu", "produkt id"] },
+        { key: "name", label: "Název", header: "name", keywords: ["nazev", "name", "title", "titulek", "jmeno"] },
+        { key: "price", label: "Cena (bez DPH)", header: "price", keywords: ["cena bez dph", "cena bez", "price", "cena"] },
+        { key: "priceVat", label: "Cena s DPH", header: "priceVat", keywords: ["cena s dph", "s dph", "dph", "pricevat", "vat"] },
+        { key: "ean", label: "EAN", header: "ean", keywords: ["ean", "barcode", "carovy kod"] },
+        { key: "manufacturer", label: "Výrobce", header: "manufacturer", keywords: ["vyrobce", "manufacturer", "znacka", "brand"] },
+        { key: "description", label: "Popis", header: "description", keywords: ["popis", "description", "desc"] },
+        { key: "availability", label: "Dostupnost", header: "availability", keywords: ["dostupnost", "availability", "sklad", "stock", "skladem"] },
+      ];
+
+      const state = {
+        headers: [],
+        rows: [],
+        mapping: [], // per source column: field key or ""
+      };
+
+      // ---- Helpers -----------------------------------------------------------
+      const $ = (id) => document.getElementById(id);
+
+      function normalize(s) {
+        return String(s ?? "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim();
+      }
+
+      function toast(msg) {
+        $("toastMsg").textContent = msg;
+        const t = $("toast");
+        t.classList.remove("hidden");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => t.classList.add("hidden"), 2800);
+      }
+
+      // Greedy auto-detection: highest keyword match wins, each field used once.
+      function autoDetect(headers) {
+        const candidates = [];
+        headers.forEach((h, i) => {
+          const nh = normalize(h);
+          if (!nh) return;
+          SHOPTET_FIELDS.forEach((f) => {
+            let best = 0;
+            f.keywords.forEach((kw) => {
+              const nkw = normalize(kw);
+              if (nh === nkw) best = Math.max(best, nkw.length + 100);
+              else if (nh.includes(nkw)) best = Math.max(best, nkw.length);
+            });
+            if (best > 0) candidates.push({ i, key: f.key, score: best });
+          });
+        });
+        candidates.sort((a, b) => b.score - a.score);
+
+        const mapping = headers.map(() => "");
+        const usedCols = new Set();
+        const usedFields = new Set();
+        for (const c of candidates) {
+          if (usedCols.has(c.i) || usedFields.has(c.key)) continue;
+          mapping[c.i] = c.key;
+          usedCols.add(c.i);
+          usedFields.add(c.key);
+        }
+        return mapping;
+      }
+
+      // ---- Parsing -----------------------------------------------------------
+      function handleWorkbook(wb) {
+        const firstSheet = wb.SheetNames[0];
+        const ws = wb.Sheets[firstSheet];
+        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: false, blankrows: false });
+        if (!aoa.length) {
+          toast("Soubor je prázdný.");
+          return;
+        }
+        state.headers = aoa[0].map((h) => String(h));
+        state.rows = aoa.slice(1).filter((r) => r.some((c) => String(c).trim() !== ""));
+        state.mapping = autoDetect(state.headers);
+
+        renderPreview();
+        renderMapping();
+        $("workspace").classList.remove("hidden");
+        $("usageCount").textContent = state.rows.length;
+        $("rowTotal").textContent = state.rows.length;
+        $("exportBtn").disabled = false;
+        updateSummary();
+        $("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function processFile(file) {
+        if (!file) return;
+        $("fileName").textContent = "Načteno: " + file.name;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            handleWorkbook(wb);
+            toast("Soubor úspěšně načten.");
+          } catch (err) {
+            console.error(err);
+            toast("Nepodařilo se přečíst soubor.");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      // ---- Rendering ---------------------------------------------------------
+      function renderPreview() {
+        const head = $("previewHead");
+        const body = $("previewBody");
+        head.innerHTML =
+          "<tr>" +
+          state.headers
+            .map((h) => `<th class="px-4 py-3 text-left font-semibold whitespace-nowrap">${escapeHtml(h)}</th>`)
+            .join("") +
+          "</tr>";
+
+        const preview = state.rows.slice(0, 5);
+        body.innerHTML = preview
+          .map(
+            (row) =>
+              "<tr class='hover:bg-white/5'>" +
+              state.headers
+                .map((_, i) => `<td class="px-4 py-3 whitespace-nowrap text-slate-300">${escapeHtml(row[i] ?? "")}</td>`)
+                .join("") +
+              "</tr>"
+          )
+          .join("");
+      }
+
+      function renderMapping() {
+        const grid = $("mappingGrid");
+        grid.innerHTML = "";
+        state.headers.forEach((h, i) => {
+          const wrap = document.createElement("div");
+          wrap.className = "rounded-xl border border-white/10 bg-slate-900/50 p-3";
+
+          const options =
+            `<option value="">— Ignorovat —</option>` +
+            SHOPTET_FIELDS.map(
+              (f) => `<option value="${f.key}" ${state.mapping[i] === f.key ? "selected" : ""}>${f.label} (${f.header})</option>`
+            ).join("");
+
+          wrap.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs text-slate-400">Sloupec zdroje</span>
+              ${state.mapping[i] ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">auto</span>' : ""}
+            </div>
+            <p class="text-sm font-semibold text-white truncate mb-2" title="${escapeHtml(h)}">${escapeHtml(h) || "(bez názvu)"}</p>
+            <select data-col="${i}" class="w-full rounded-lg bg-slate-800 border border-white/10 text-sm text-slate-200 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-neon-indigo">
+              ${options}
+            </select>`;
+          grid.appendChild(wrap);
+        });
+
+        grid.querySelectorAll("select").forEach((sel) => {
+          sel.addEventListener("change", (e) => {
+            state.mapping[Number(e.target.dataset.col)] = e.target.value;
+            updateSummary();
+          });
+        });
+      }
+
+      function updateSummary() {
+        const mapped = state.mapping.filter(Boolean).length;
+        $("mapSummary").textContent = `Namapováno ${mapped} z ${state.headers.length} sloupců na pole Shoptetu.`;
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // ---- Export ------------------------------------------------------------
+      function exportData() {
+        const cols = state.mapping
+          .map((key, i) => ({ i, key }))
+          .filter((c) => c.key);
+
+        if (!cols.length) {
+          toast("Namapujte alespoň jeden sloupec.");
+          return;
+        }
+
+        const outHeaders = cols.map((c) => SHOPTET_FIELDS.find((f) => f.key === c.key).header);
+        const aoa = [outHeaders];
+        state.rows.forEach((row) => {
+          aoa.push(cols.map((c) => row[c.i] ?? ""));
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Products");
+        XLSX.writeFile(wb, "shoptet-import.xlsx");
+        toast("Export hotový: shoptet-import.xlsx");
+      }
+
+      // ---- Sample data (uses the same SheetJS pipeline) ----------------------
+      function loadSample() {
+        const sample = [
+          ["Kód", "Název produktu", "Cena bez DPH", "Cena s DPH", "EAN", "Výrobce", "Popis", "Skladem"],
+          ["A-1001", "Bezdrátová myš Logi X", "399", "483", "8590000000012", "Logitech", "Ergonomická myš", "12"],
+          ["A-1002", "Klávesnice Mecha K2", "1290", "1561", "8590000000029", "Keychron", "Mechanická klávesnice", "5"],
+          ["A-1003", "USB-C Hub 7v1", "690", "835", "8590000000036", "Ugreen", "Hub s HDMI a čtečkou", "23"],
+          ["A-1004", "Webkamera FHD 1080p", "899", "1088", "8590000000043", "Trust", "Full HD webkamera", "0"],
+          ["A-1005", "Sluchátka BT Air Pro", "1590", "1924", "8590000000050", "Anker", "Bezdrátová sluchátka", "8"],
+          ["A-1006", "Powerbanka 20000 mAh", "749", "906", "8590000000067", "Xiaomi", "Rychlonabíjecí powerbanka", "15"],
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(sample);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sample");
+        $("fileName").textContent = "Načteno: ukázková data";
+        handleWorkbook(wb);
+        toast("Ukázková data načtena.");
+      }
+
+      // ---- Events ------------------------------------------------------------
+      const dropzone = $("dropzone");
+      $("fileInput").addEventListener("change", (e) => processFile(e.target.files[0]));
+
+      ["dragenter", "dragover"].forEach((ev) =>
+        dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dropzone-active");
+        })
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dropzone-active");
+        })
+      );
+      dropzone.addEventListener("drop", (e) => {
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) processFile(file);
+      });
+
+      $("sampleBtn").addEventListener("click", loadSample);
+      $("exportBtn").addEventListener("click", exportData);
+
+      // Pricing modal
+      const modal = $("pricingModal");
+      const openModal = () => modal.classList.remove("hidden");
+      const closeModal = () => modal.classList.add("hidden");
+      $("pricingBtn").addEventListener("click", openModal);
+      $("closePricing").addEventListener("click", closeModal);
+      $("pricingBackdrop").addEventListener("click", closeModal);
+      $("subscribeBtn").addEventListener("click", () => {
+        closeModal();
+        toast("Ukázka: přesměrování na platební bránu (390 Kč / měsíc).");
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
+    </script>
+  </body>
+</html>
