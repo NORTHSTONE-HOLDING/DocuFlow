@@ -4,8 +4,8 @@ interface AuthModalProps {
   open: boolean;
   mode?: 'login' | 'signup';
   onClose: () => void;
-  onSignIn: (email: string, password: string, name?: string) => void;
-  onSignUp: (name: string, email: string, password: string) => void;
+  onSignIn: (email: string, password: string, name?: string) => void | Promise<void>;
+  onSignUp: (name: string, email: string, password: string) => void | Promise<void>;
 }
 
 export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }: AuthModalProps) {
@@ -25,23 +25,27 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
 
   if (!open) return null;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!email.trim() || !password.trim()) {
       setError('Vyplňte e-mail a heslo.');
       return;
     }
-    if (tab === 'signup') {
-      if (!name.trim()) {
-        setError('Zadejte jméno.');
-        return;
+    try {
+      if (tab === 'signup') {
+        if (!name.trim()) {
+          setError('Zadejte jméno.');
+          return;
+        }
+        await onSignUp(name.trim(), email.trim(), password);
+      } else {
+        await onSignIn(email.trim(), password, name.trim() || undefined);
       }
-      onSignUp(name.trim(), email.trim(), password);
-    } else {
-      onSignIn(email.trim(), password, name.trim() || undefined);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Přihlášení selhalo.');
     }
-    onClose();
   };
 
   return (

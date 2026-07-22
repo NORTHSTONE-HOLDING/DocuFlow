@@ -12,6 +12,8 @@ import {
   signUpLocal,
   upgradePlanLocal,
 } from '../utils/auth';
+import { getSupabase } from '../utils/supabase';
+import { createId } from '../utils/storage';
 
 export function useAuth() {
   const [auth, setAuth] = useState<AuthState>(loadAuth);
@@ -20,6 +22,25 @@ export function useAuth() {
   useEffect(() => {
     setAuth(loadAuth());
     setReady(true);
+
+    const supabase = getSupabase();
+    if (!supabase) return;
+    void supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+      if (!user) return;
+      const prev = loadAuth();
+      const next: AuthState = {
+        ...prev,
+        user: {
+          id: user.id,
+          name: (user.user_metadata?.name as string) || user.email || 'Uživatel',
+          email: user.email || '',
+          createdAt: user.created_at || new Date().toISOString(),
+        },
+      };
+      saveAuth(next);
+      setAuth(next);
+    });
   }, []);
 
   const persist = useCallback((next: AuthState) => {
@@ -28,20 +49,59 @@ export function useAuth() {
   }, []);
 
   const signUp = useCallback(
-    (name: string, email: string, password: string) => {
+    async (name: string, email: string, password: string) => {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { name } },
+        });
+        if (!error && data.user) {
+          persist({
+            ...loadAuth(),
+            user: {
+              id: data.user.id,
+              name,
+              email,
+              createdAt: data.user.created_at || new Date().toISOString(),
+            },
+          });
+          return;
+        }
+      }
+      // Offline / mock fallback
       persist(signUpLocal(name, email, password));
     },
     [persist],
   );
 
   const signIn = useCallback(
-    (email: string, password: string, name?: string) => {
+    async (email: string, password: string, name?: string) => {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!error && data.user) {
+          persist({
+            ...loadAuth(),
+            user: {
+              id: data.user.id,
+              name: (data.user.user_metadata?.name as string) || name || 'Uživatel',
+              email,
+              createdAt: data.user.created_at || new Date().toISOString(),
+            },
+          });
+          return;
+        }
+      }
       persist(signInLocal(email, password, name));
     },
     [persist],
   );
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    const supabase = getSupabase();
+    if (supabase) await supabase.auth.signOut();
     persist(signOutLocal());
   }, [persist]);
 
@@ -71,5 +131,7 @@ export function useAuth() {
     signOut,
     upgradePlan,
     recordDocumentCreated,
+    // reserved for future cloud sync session ids
+    sessionHint: auth.user?.id || createId(),
   };
 }

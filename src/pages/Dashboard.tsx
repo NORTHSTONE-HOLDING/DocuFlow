@@ -1,222 +1,126 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { AuthState, DocumentRecord } from '../types/document';
-import { formatCurrency, formatDate } from '../utils/format';
-import { downloadPdf, openMailto, printDocument } from '../utils/pdf';
-import { EmailModal } from '../components/EmailModal';
+import { Link, useNavigate } from 'react-router-dom';
 import { BillingWidget } from '../components/BillingWidget';
+import type { AuthState } from '../types/document';
+import type { CompanyProfile, Project, WorkflowStage } from '../types/erp';
+import { STAGE_LABELS } from '../types/erp';
+import { formatCurrency, formatDate } from '../utils/format';
+import { createProjectWithQuote } from '../utils/workflow';
 
 interface DashboardProps {
-  documents: DocumentRecord[];
-  onDelete: (id: string) => void;
+  documentsCountLegacy: number;
+  projects: Project[];
+  profile: CompanyProfile;
   auth: AuthState;
   canCreate: boolean;
   onBlocked: () => void;
+  onDocumentCreated: () => void;
+  onRefresh: () => void;
+  onDeleteProject: (id: string) => void;
 }
 
-export function Dashboard({ documents, onDelete, auth, canCreate, onBlocked }: DashboardProps) {
-  const [menuId, setMenuId] = useState<string | null>(null);
-  const [emailDoc, setEmailDoc] = useState<DocumentRecord | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+export function Dashboard({
+  projects,
+  profile,
+  auth,
+  canCreate,
+  onBlocked,
+  onDocumentCreated,
+  onRefresh,
+  onDeleteProject,
+}: DashboardProps) {
+  const navigate = useNavigate();
 
-  const stats = useMemo(() => {
-    const total = documents.length;
-    const value = documents.reduce((s, d) => s + (d.price || 0), 0);
-    const month = documents.filter((d) => {
-      const dt = new Date(d.createdAt);
-      const now = new Date();
-      return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear();
-    }).length;
-    return { total, value, month };
-  }, [documents]);
-
-  const handleDownload = async (doc: DocumentRecord) => {
-    setBusyId(doc.id);
-    setMenuId(null);
-    try {
-      await downloadPdf(doc);
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const newDocClick = (e: React.MouseEvent) => {
+  const startProject = () => {
     if (!canCreate) {
-      e.preventDefault();
       onBlocked();
+      return;
     }
+    const { project } = createProjectWithQuote(profile, { name: 'Nová zakázka' });
+    onDocumentCreated();
+    onRefresh();
+    navigate(`/zakazka/${project.id}`);
   };
+
+  const stages: WorkflowStage[] = [1, 2, 3, 4, 5];
 
   return (
     <div className="page fade-in">
       <div className="page__header">
         <div>
-          <p className="eyebrow">Nástěnka</p>
-          <h1>Vaše dokumenty</h1>
-          <p className="page__sub">Historie generovaných smluv uložená lokálně v prohlížeči.</p>
+          <p className="eyebrow">ERP Workflow</p>
+          <h1>Nástěnka zakázek</h1>
+          <p className="page__sub">
+            Pipeline Nabídka → Smlouva → Záloha → Předání → Doplatek s automatickým číslováním 2026.
+          </p>
         </div>
-        <Link to="/novy" className="btn btn--primary" onClick={newDocClick}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-          </svg>
-          Nový dokument
-        </Link>
+        <button type="button" className="btn btn--primary" onClick={startProject}>
+          + Nová nabídka (CN2026…)
+        </button>
       </div>
 
       <BillingWidget auth={auth} />
 
-      <div className="stat-row">
-        <div className="stat">
-          <span>Celkem dokumentů</span>
-          <strong>{stats.total}</strong>
-        </div>
-        <div className="stat">
-          <span>Tento měsíc</span>
-          <strong>{stats.month}</strong>
-        </div>
-        <div className="stat">
-          <span>Celková hodnota</span>
-          <strong>{formatCurrency(stats.value)}</strong>
-        </div>
-      </div>
+      <section className="pipeline-legend">
+        <h2>Stavový tracker</h2>
+        <ol className="pipeline pipeline--legend">
+          {stages.map((s) => (
+            <li key={s} className="pipeline__step">
+              <span>{s}</span>
+              <strong>{STAGE_LABELS[s]}</strong>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-      {(auth.planId === 'business' || auth.planId === 'enterprise') && (
-        <div className="analytics-strip">
-          <strong>Business analytika</strong>
-          <span>
-            Průměrná hodnota dokumentu:{' '}
-            {formatCurrency(stats.total ? Math.round(stats.value / stats.total) : 0)}
-          </span>
-          <span>Aktivita: {stats.month} dok. tento měsíc</span>
-        </div>
-      )}
-
-      {documents.length === 0 ? (
+      {projects.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state__icon" aria-hidden>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path d="M8 3h7l4 4v14a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-              <path d="M15 3v4h4M9 12h6M9 16h4" strokeLinecap="round" />
-            </svg>
-          </div>
-          <h2>Zatím žádné dokumenty</h2>
-          <p>Vytvořte první smlouvu — Free plán zahrnuje 3 dokumenty zdarma.</p>
-          <Link to="/novy" className="btn btn--primary" onClick={newDocClick}>
-            Spustit průvodce
-          </Link>
+          <h2>Zatím žádné zakázky</h2>
+          <p>Vytvořte první cenovou nabídku — systém přidělí číslo CN2026001 a spustí workflow.</p>
+          <button type="button" className="btn btn--primary" onClick={startProject}>
+            Spustit první nabídku
+          </button>
         </div>
       ) : (
-        <>
-          <div className="docs-table docs-table--desktop">
-            <div className="docs-table__head">
-              <span>Dokument</span>
-              <span>Klient</span>
-              <span>Datum</span>
-              <span>Hodnota</span>
-              <span>Akce</span>
-            </div>
-            {documents.map((doc) => (
-              <div className="docs-table__row" key={doc.id}>
-                <div className="docs-table__name">
-                  <strong>{doc.name}</strong>
-                  <span>{doc.templateLabel}</span>
-                </div>
-                <span>{doc.clientName || '—'}</span>
-                <span>{formatDate(doc.createdAt)}</span>
-                <span className="docs-table__price">{formatCurrency(doc.price)}</span>
-                <div className="docs-table__actions">
-                  <button
-                    type="button"
-                    className="btn btn--ghost btn--sm"
-                    disabled={busyId === doc.id}
-                    onClick={() => handleDownload(doc)}
-                    title="Stáhnout PDF"
-                  >
-                    Stáhnout
-                  </button>
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setEmailDoc(doc)}>
-                    E-mail
-                  </button>
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => printDocument(doc)}>
-                    Tisk
-                  </button>
-                  <div className="actions-menu">
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      aria-label="Další akce"
-                      onClick={() => setMenuId(menuId === doc.id ? null : doc.id)}
-                    >
-                      ⋮
-                    </button>
-                    {menuId === doc.id && (
-                      <div className="actions-menu__dropdown">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onDelete(doc.id);
-                            setMenuId(null);
-                          }}
-                        >
-                          Smazat
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        <div className="project-list">
+          {projects.map((p) => (
+            <article key={p.id} className="project-row">
+              <div className="project-row__main">
+                <Link to={`/zakazka/${p.id}`}>
+                  <strong>{p.name}</strong>
+                </Link>
+                <span>{p.clientName || 'Bez klienta'}</span>
+                <ol className="mini-pipeline">
+                  {stages.map((s) => (
+                    <li key={s} className={p.stage >= s ? 'is-on' : ''} title={STAGE_LABELS[s]}>
+                      {s}
+                    </li>
+                  ))}
+                </ol>
               </div>
-            ))}
-          </div>
-
-          <div className="docs-cards docs-cards--mobile">
-            {documents.map((doc) => (
-              <article className="doc-card" key={doc.id}>
-                <header>
-                  <strong>{doc.name}</strong>
-                  <span>{doc.templateLabel}</span>
-                </header>
-                <dl>
-                  <div>
-                    <dt>Klient</dt>
-                    <dd>{doc.clientName || '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Datum</dt>
-                    <dd>{formatDate(doc.createdAt)}</dd>
-                  </div>
-                  <div>
-                    <dt>Hodnota</dt>
-                    <dd>{formatCurrency(doc.price)}</dd>
-                  </div>
-                </dl>
-                <footer className="doc-card__actions">
-                  <button type="button" className="btn btn--primary btn--sm" onClick={() => handleDownload(doc)}>
-                    Stáhnout
-                  </button>
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setEmailDoc(doc)}>
-                    E-mail
-                  </button>
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => printDocument(doc)}>
-                    Tisk
-                  </button>
-                  <button type="button" className="btn btn--danger btn--sm" onClick={() => onDelete(doc.id)}>
-                    Smazat
-                  </button>
-                </footer>
-              </article>
-            ))}
-          </div>
-        </>
+              <div className="project-row__meta">
+                <span>{STAGE_LABELS[p.stage]}</span>
+                <strong>{formatCurrency(p.value)}</strong>
+                <span>{formatDate(p.updatedAt || p.createdAt)}</span>
+                <button type="button" className="btn btn--danger btn--sm" onClick={() => onDeleteProject(p.id)}>
+                  Smazat
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
 
-      <EmailModal
-        open={!!emailDoc}
-        documentName={emailDoc?.name ?? ''}
-        onClose={() => setEmailDoc(null)}
-        onSend={(email) => {
-          if (emailDoc) openMailto(email, emailDoc);
-        }}
-      />
+      <div className="dashboard-links">
+        <Link to="/audit" className="btn btn--secondary">
+          AI Právní Audit
+        </Link>
+        <Link to="/profil" className="btn btn--ghost">
+          Můj Profil / Moje Firma
+        </Link>
+        <Link to="/novy" className="btn btn--ghost">
+          Klasický průvodce dokumentem
+        </Link>
+      </div>
     </div>
   );
 }

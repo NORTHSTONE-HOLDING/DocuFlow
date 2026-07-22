@@ -4,11 +4,12 @@ import type { PlanId } from '../types/document';
 
 const NAV = [
   { to: '/', label: 'Nástěnka', icon: 'dashboard' },
+  { to: '/profil', label: 'Můj Profil / Firma', icon: 'profile' },
   { to: '/novy', label: 'Nový dokument', icon: 'new' },
   { to: '/audit', label: 'AI Právní Audit', icon: 'audit' },
   { to: '/sablony', label: 'Šablony', icon: 'templates' },
   { to: '/cenik', label: 'Ceník', icon: 'pricing' },
-  { to: '/nastaveni', label: 'Nastavení / Fakturace', icon: 'settings' },
+  { to: '/nastaveni', label: 'Nastavení', icon: 'settings' },
 ] as const;
 
 interface AppShellProps {
@@ -23,6 +24,7 @@ interface AppShellProps {
   onOpenLogin: () => void;
   onOpenSignup: () => void;
   onSignOut: () => void;
+  supabaseReady?: boolean;
 }
 
 function NavIcon({ name }: { name: (typeof NAV)[number]['icon'] }) {
@@ -34,6 +36,13 @@ function NavIcon({ name }: { name: (typeof NAV)[number]['icon'] }) {
           <rect x="14" y="3" width="7" height="5" rx="1.5" />
           <rect x="14" y="12" width="7" height="9" rx="1.5" />
           <rect x="3" y="16" width="7" height="5" rx="1.5" />
+        </svg>
+      );
+    case 'profile':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 19c1.5-3 4-4.5 7-4.5s5.5 1.5 7 4.5" strokeLinecap="round" />
         </svg>
       );
     case 'new':
@@ -84,6 +93,7 @@ export function AppShell({
   onOpenLogin,
   onOpenSignup,
   onSignOut,
+  supabaseReady = false,
 }: AppShellProps) {
   return (
     <div className="shell">
@@ -144,8 +154,8 @@ export function AppShell({
         </div>
 
         <div className="sidebar__footer">
-          <p>Lokální režim</p>
-          <span>Bez serveru · LocalStorage</span>
+          <p>{supabaseReady ? 'Supabase připraven' : 'Lokální / Hybrid režim'}</p>
+          <span>{supabaseReady ? 'Cloud auth aktivní' : 'LocalStorage · offline OK'}</span>
         </div>
       </aside>
 
