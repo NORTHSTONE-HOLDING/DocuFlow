@@ -301,11 +301,15 @@
       function processFile(file) {
         if (!file) return;
         $("fileName").textContent = "Načteno: " + file.name;
+        // CSV is a text format: read it as UTF-8 so Czech diacritics (á, ř, ž…)
+        // survive. Binary formats (.xlsx/.xls) are read as an array buffer.
+        const isCsv = /\.csv$/i.test(file.name) || file.type === "text/csv";
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, { type: "array" });
+            const wb = isCsv
+              ? XLSX.read(e.target.result, { type: "string" })
+              : XLSX.read(new Uint8Array(e.target.result), { type: "array" });
             handleWorkbook(wb);
             toast("Soubor úspěšně načten.");
           } catch (err) {
@@ -313,7 +317,8 @@
             toast("Nepodařilo se přečíst soubor.");
           }
         };
-        reader.readAsArrayBuffer(file);
+        if (isCsv) reader.readAsText(file, "UTF-8");
+        else reader.readAsArrayBuffer(file);
       }
 
       // ---- Rendering ---------------------------------------------------------
