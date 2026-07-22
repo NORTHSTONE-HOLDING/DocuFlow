@@ -53,10 +53,10 @@ export const PLANS: SubscriptionPlan[] = [
     documentLimit: null,
     features: [
       'Vše z Premium',
+      'AI Právní Audit cizích smluv',
       'Týmové použití',
       'Základní analytika na nástěnce',
       'Prioritní šablony',
-      'Export historie',
     ],
   },
   {
@@ -68,9 +68,9 @@ export const PLANS: SubscriptionPlan[] = [
     documentLimit: null,
     features: [
       'Vše z Business',
+      'Neomezený AI Právní Audit',
       'Prioritní podpora',
       'API přístup (mock)',
-      'Vlastní branding dokumentů',
       'SLA a auditní log',
     ],
   },

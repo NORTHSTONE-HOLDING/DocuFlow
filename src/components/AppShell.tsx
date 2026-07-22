@@ -5,6 +5,7 @@ import type { PlanId } from '../types/document';
 const NAV = [
   { to: '/', label: 'Nástěnka', icon: 'dashboard' },
   { to: '/novy', label: 'Nový dokument', icon: 'new' },
+  { to: '/audit', label: 'AI Právní Audit', icon: 'audit' },
   { to: '/sablony', label: 'Šablony', icon: 'templates' },
   { to: '/cenik', label: 'Ceník', icon: 'pricing' },
   { to: '/nastaveni', label: 'Nastavení / Fakturace', icon: 'settings' },
@@ -39,6 +40,13 @@ function NavIcon({ name }: { name: (typeof NAV)[number]['icon'] }) {
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+        </svg>
+      );
+    case 'audit':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <circle cx="11" cy="11" r="6.5" />
+          <path d="M16 16l4.5 4.5M9 11h4M11 9v4" strokeLinecap="round" />
         </svg>
       );
     case 'templates':

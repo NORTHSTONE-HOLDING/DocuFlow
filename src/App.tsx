@@ -10,6 +10,7 @@ import { NewDocument } from './pages/NewDocument';
 import { Templates } from './pages/Templates';
 import { Settings } from './pages/Settings';
 import { Pricing } from './pages/Pricing';
+import { AiAudit } from './pages/AiAudit';
 import type { PlanId } from './types/document';
 
 export default function App() {
@@ -79,6 +80,7 @@ export default function App() {
           }
         />
         <Route path="/sablony" element={<Templates />} />
+        <Route path="/audit" element={<AiAudit planId={auth.planId} onUpgradeHint={() => undefined} />} />
         <Route
           path="/cenik"
           element={

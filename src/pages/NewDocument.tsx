@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { TEMPLATES, getTemplate } from '../data/templates';
 import type { DocumentRecord, PartyInfo, TemplateId, WizardState } from '../types/document';
 import { createId } from '../utils/storage';
@@ -273,6 +273,15 @@ export function NewDocument({ onSave, canCreate, onBlocked, onDocumentCreated }:
           <h1>Nový dokument</h1>
           <p className="page__sub">České šablony, ARES lookup a AI asistent — čtyři kroky k formálnímu dokumentu.</p>
         </div>
+      </div>
+
+      <div className="doc-mode-tabs" role="tablist" aria-label="Režim dokumentu">
+        <span className="doc-mode-tabs__item is-active" role="tab" aria-selected="true">
+          Vytvořit dokument
+        </span>
+        <Link to="/audit" className="doc-mode-tabs__item" role="tab" aria-selected="false">
+          AI Audit cizí smlouvy
+        </Link>
       </div>
 
       <ol className="wizard-steps">
