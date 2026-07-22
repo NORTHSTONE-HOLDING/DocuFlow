@@ -426,10 +426,6 @@ img {
   background: rgba(139, 92, 246, 0.14);
   color: #e9d5ff;
 }
-.btn--ghost:hover:not(:disabled) {
-  border-color: var(--hover-purple);
-  background: rgba(37, 99, 235, 0.1);
-}
 .btn--whatsapp {
   display: inline-flex;
   align-items: center;
@@ -458,8 +454,9 @@ img {
   color: var(--text);
 }
 .btn--ghost:hover:not(:disabled) {
-  border-color: rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--hover-purple);
+  background: rgba(37, 99, 235, 0.1);
+  color: #dbeafe;
 }
 .btn--danger {
   background: rgba(248, 113, 113, 0.1);
@@ -2626,7 +2623,249 @@ a.doc-mode-tabs__item:hover {
   font-family: var(--font-display);
 }
 
+/* ——— Voice / Photo scan / Debt collector ——— */
+.item-manager__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+.voice-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: min(100%, 280px);
+}
+.btn--voice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25), rgba(16, 185, 129, 0.12));
+  color: var(--mint);
+  font-weight: 800;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), border-color 0.2s, background 0.2s;
+}
+.btn--voice:hover {
+  border-color: var(--hover-purple);
+  background: rgba(37, 99, 235, 0.16);
+  color: #dbeafe;
+  transform: translateY(-1px);
+}
+.btn--voice.is-listening {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+.voice-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  animation: pulse 1.2s ease infinite;
+}
+.voice-capture__status {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+}
+.voice-capture__status strong {
+  display: block;
+  color: var(--mint);
+  font-size: 0.9rem;
+}
+.voice-capture__status p {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.voice-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+  padding-top: 2px;
+}
+.voice-bars span {
+  width: 4px;
+  border-radius: 999px;
+  background: var(--emerald-400);
+  animation: voice-bar 0.9s ease-in-out infinite;
+}
+.voice-bars span:nth-child(1) { height: 30%; animation-delay: 0s; }
+.voice-bars span:nth-child(2) { height: 60%; animation-delay: 0.1s; }
+.voice-bars span:nth-child(3) { height: 100%; animation-delay: 0.2s; }
+.voice-bars span:nth-child(4) { height: 50%; animation-delay: 0.3s; }
+.voice-bars span:nth-child(5) { height: 75%; animation-delay: 0.4s; }
+@keyframes voice-bar {
+  0%, 100% { transform: scaleY(0.45); opacity: 0.7; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+.voice-capture__transcript {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.voice-capture__transcript em {
+  color: var(--mint);
+  font-style: normal;
+}
+
+.ai-intake-panel {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+  padding: 1.15rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background:
+    radial-gradient(500px 160px at 0% 0%, rgba(16, 185, 129, 0.12), transparent 60%),
+    rgba(15, 23, 42, 0.55);
+}
+.ai-intake-panel__copy h2 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+.ai-intake-panel__copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.photo-scan__zone {
+  width: 100%;
+  text-align: left;
+  padding: 1.1rem 1.15rem;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(16, 185, 129, 0.45);
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease);
+}
+.photo-scan__zone:hover,
+.photo-scan__zone.is-dragging {
+  border-color: var(--hover-purple);
+  background: rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+.photo-scan__zone.is-loading {
+  cursor: wait;
+  border-style: solid;
+}
+.photo-scan__icon {
+  display: block;
+  font-size: 1.4rem;
+  margin-bottom: 0.35rem;
+}
+.photo-scan__zone strong {
+  display: block;
+  font-family: var(--font-display);
+  margin-bottom: 0.25rem;
+}
+.photo-scan__zone p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.photo-scan__zone em {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.75rem;
+  color: var(--emerald-400);
+  font-style: normal;
+}
+.photo-scan__loading {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.photo-scan__loading strong {
+  color: var(--mint);
+}
+.photo-scan__loading p {
+  margin: 0.2rem 0 0;
+}
+
+.btn--debt {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fde68a;
+  border-radius: 10px;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+.btn--debt:hover {
+  border-color: var(--hover-purple);
+  background: rgba(37, 99, 235, 0.14);
+  color: #dbeafe;
+  transform: translateY(-1px);
+}
+.debt-modal {
+  width: min(560px, 100%);
+}
+.debt-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+.debt-modal__meta span,
+.debt-modal__meta strong {
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+}
+.debt-modal__meta strong {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.1);
+}
+.debt-modal__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+.debt-modal__label textarea {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.debt-modal__actions {
+  width: 100%;
+  justify-content: space-between;
+}
+.debt-modal__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #fde68a;
+}
+
 @media (max-width: 900px) {
+  .ai-intake-panel {
+    grid-template-columns: 1fr;
+  }
   .pipeline,
   .pipeline--legend {
     grid-template-columns: 1fr 1fr;

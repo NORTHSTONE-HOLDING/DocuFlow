@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ItemManager } from '../components/ItemManager';
+import { PhotoScanDropzone } from '../components/PhotoScanDropzone';
 import type { CompanyProfile, Project, WorkflowDocument, WorkflowStage } from '../types/erp';
 import { KIND_LABELS, STAGE_LABELS } from '../types/erp';
 import { fetchAresCompany } from '../utils/ares';
@@ -180,6 +181,31 @@ export function ProjectDetail({
 
       {msg && <div className="alert alert--ok">{msg}</div>}
 
+      {(doc.kind === 'quote' || doc.kind === 'contract') && (
+        <section className="ai-intake-panel">
+          <div className="ai-intake-panel__copy">
+            <h2>AI načtení zakázky</h2>
+            <p>Nahrajte fotku rozpočtu / skici ze stavby — položky a klient se doplní automaticky.</p>
+          </div>
+          <PhotoScanDropzone
+            onResult={({ items, client, notes }) => {
+              persist({
+                ...doc,
+                items,
+                notes: notes || doc.notes,
+                client: {
+                  ...doc.client,
+                  name: client.name || doc.client.name,
+                  address: client.address || doc.client.address,
+                  ico: client.ico || doc.client.ico,
+                },
+              });
+              setMsg('Položky načteny z fotky / skici.');
+            }}
+          />
+        </section>
+      )}
+
       <div className="project-grid">
         <section className="settings-card">
           <h2>Klient</h2>
@@ -315,7 +341,11 @@ export function ProjectDetail({
         </section>
       </div>
 
-      <ItemManager items={doc.items} onChange={(items) => persist({ ...doc, items })} />
+      <ItemManager
+        items={doc.items}
+        onChange={(items) => persist({ ...doc, items })}
+        enableVoice={doc.kind === 'quote' || doc.kind === 'contract'}
+      />
     </div>
   );
 }

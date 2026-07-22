@@ -3,13 +3,16 @@ import { formatCurrency } from '../utils/format';
 import type { LineItem, VatRate } from '../types/erp';
 import { VAT_OPTIONS } from '../types/erp';
 import { newLineItem } from '../utils/erpStorage';
+import { VoiceCapture } from './VoiceCapture';
 
 interface ItemManagerProps {
   items: LineItem[];
   onChange: (items: LineItem[]) => void;
+  /** When true, show voice invoicing (quotes & contracts) */
+  enableVoice?: boolean;
 }
 
-export function ItemManager({ items, onChange }: ItemManagerProps) {
+export function ItemManager({ items, onChange, enableVoice = true }: ItemManagerProps) {
   const totals = calculateTotals(items);
 
   const update = (id: string, patch: Partial<LineItem>) => {
@@ -20,9 +23,19 @@ export function ItemManager({ items, onChange }: ItemManagerProps) {
     <div className="item-manager">
       <div className="item-manager__head">
         <h3>Položky / DPH</h3>
-        <button type="button" className="btn btn--secondary btn--sm" onClick={() => onChange([...items, newLineItem()])}>
-          + Přidat řádek
-        </button>
+        <div className="item-manager__actions">
+          {enableVoice && (
+            <VoiceCapture
+              onItems={(parsed) => {
+                const cleaned = items.filter((i) => i.name.trim() || i.unitPrice > 0);
+                onChange(cleaned.length ? [...cleaned, ...parsed] : parsed);
+              }}
+            />
+          )}
+          <button type="button" className="btn btn--secondary btn--sm" onClick={() => onChange([...items, newLineItem()])}>
+            + Přidat řádek
+          </button>
+        </div>
       </div>
 
       <div className="item-table">

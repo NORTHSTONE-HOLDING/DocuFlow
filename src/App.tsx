@@ -28,7 +28,7 @@ export default function App() {
   const { documents, save } = useDocuments();
   const { settings, update } = useSettings();
   const { profile, save: saveProfile } = useCompanyProfile();
-  const { projects, refresh, removeProject } = useProjects();
+  const { projects, docs, refresh, removeProject } = useProjects();
   const {
     auth,
     plan,
@@ -82,6 +82,7 @@ export default function App() {
             <Dashboard
               documentsCountLegacy={documents.length}
               projects={projects}
+              docs={docs}
               profile={profile}
               auth={auth}
               canCreate={canCreate}
