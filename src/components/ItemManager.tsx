@@ -3,6 +3,7 @@ import { formatCurrency } from '../utils/format';
 import type { LineItem, VatRate } from '../types/erp';
 import { VAT_OPTIONS } from '../types/erp';
 import { newLineItem } from '../utils/erpStorage';
+import { FeatureGate } from './FeatureGate';
 import { VoiceCapture } from './VoiceCapture';
 
 interface ItemManagerProps {
@@ -25,12 +26,14 @@ export function ItemManager({ items, onChange, enableVoice = true }: ItemManager
         <h3>Položky / DPH</h3>
         <div className="item-manager__actions">
           {enableVoice && (
-            <VoiceCapture
-              onItems={(parsed) => {
-                const cleaned = items.filter((i) => i.name.trim() || i.unitPrice > 0);
-                onChange(cleaned.length ? [...cleaned, ...parsed] : parsed);
-              }}
-            />
+            <FeatureGate feature="voice" compact className="feature-gate--inline">
+              <VoiceCapture
+                onItems={(parsed) => {
+                  const cleaned = items.filter((i) => i.name.trim() || i.unitPrice > 0);
+                  onChange(cleaned.length ? [...cleaned, ...parsed] : parsed);
+                }}
+              />
+            </FeatureGate>
           )}
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => onChange([...items, newLineItem()])}>
             + Přidat řádek

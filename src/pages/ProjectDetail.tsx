@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { FeatureGate, useFeatureAccess } from '../components/FeatureGate';
 import { ItemManager } from '../components/ItemManager';
 import { PhotoScanDropzone } from '../components/PhotoScanDropzone';
 import type { CompanyProfile, Project, WorkflowDocument, WorkflowStage } from '../types/erp';
@@ -35,6 +36,7 @@ export function ProjectDetail({
 }: ProjectDetailProps) {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const { require } = useFeatureAccess();
   const project = projects.find((p) => p.id === projectId);
   const [doc, setDoc] = useState<WorkflowDocument | null>(null);
   const [aresLoading, setAresLoading] = useState(false);
@@ -187,22 +189,24 @@ export function ProjectDetail({
             <h2>AI načtení zakázky</h2>
             <p>Nahrajte fotku rozpočtu / skici ze stavby — položky a klient se doplní automaticky.</p>
           </div>
-          <PhotoScanDropzone
-            onResult={({ items, client, notes }) => {
-              persist({
-                ...doc,
-                items,
-                notes: notes || doc.notes,
-                client: {
-                  ...doc.client,
-                  name: client.name || doc.client.name,
-                  address: client.address || doc.client.address,
-                  ico: client.ico || doc.client.ico,
-                },
-              });
-              setMsg('Položky načteny z fotky / skici.');
-            }}
-          />
+          <FeatureGate feature="photoScan">
+            <PhotoScanDropzone
+              onResult={({ items, client, notes }) => {
+                persist({
+                  ...doc,
+                  items,
+                  notes: notes || doc.notes,
+                  client: {
+                    ...doc.client,
+                    name: client.name || doc.client.name,
+                    address: client.address || doc.client.address,
+                    ico: client.ico || doc.client.ico,
+                  },
+                });
+                setMsg('Položky načteny z fotky / skici.');
+              }}
+            />
+          </FeatureGate>
         </section>
       )}
 
@@ -224,31 +228,34 @@ export function ProjectDetail({
                   value={doc.client.ico}
                   onChange={(e) => persist({ ...doc, client: { ...doc.client, ico: e.target.value } })}
                 />
-                <button
-                  type="button"
-                  className="btn btn--secondary btn--sm"
-                  disabled={aresLoading}
-                  onClick={async () => {
-                    setAresLoading(true);
-                    try {
-                      const c = await fetchAresCompany(doc.client.ico);
-                      persist({
-                        ...doc,
-                        client: {
-                          ...doc.client,
-                          name: c.name,
-                          ico: c.ico,
-                          dic: c.dic || doc.client.dic,
-                          address: c.address,
-                        },
-                      });
-                    } finally {
-                      setAresLoading(false);
-                    }
-                  }}
-                >
-                  {aresLoading ? '…' : 'Načíst z ARES'}
-                </button>
+                <FeatureGate feature="ares" compact className="feature-gate--inline">
+                  <button
+                    type="button"
+                    className="btn btn--secondary btn--sm"
+                    disabled={aresLoading}
+                    onClick={async () => {
+                      if (!require('ares')) return;
+                      setAresLoading(true);
+                      try {
+                        const c = await fetchAresCompany(doc.client.ico);
+                        persist({
+                          ...doc,
+                          client: {
+                            ...doc.client,
+                            name: c.name,
+                            ico: c.ico,
+                            dic: c.dic || doc.client.dic,
+                            address: c.address,
+                          },
+                        });
+                      } finally {
+                        setAresLoading(false);
+                      }
+                    }}
+                  >
+                    {aresLoading ? '…' : 'Načíst z ARES'}
+                  </button>
+                </FeatureGate>
               </div>
             </label>
             <label>

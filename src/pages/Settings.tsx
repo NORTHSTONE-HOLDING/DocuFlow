@@ -1,6 +1,7 @@
 import type { AppSettings, AuthState, PlanId } from '../types/document';
 import { getPlan, formatPlanPrice } from '../data/plans';
 import { Link } from 'react-router-dom';
+import { PlanSwitcher } from '../components/PlanSwitcher';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -23,6 +24,12 @@ export function Settings({ settings, onUpdate, auth, onOpenAuth, onSignOut, onUp
           <p className="page__sub">Lokální profil společnosti a stav předplatného.</p>
         </div>
       </div>
+
+      <section className="settings-card plan-switcher-card">
+        <h2>Aktuální tarif</h2>
+        <p className="wizard-panel__sub">Simulace předplatného — okamžitě mění dostupnost funkcí v aplikaci.</p>
+        <PlanSwitcher planId={auth.planId} onChange={onUpgrade} />
+      </section>
 
       <div className="settings-layout">
         <section className="settings-card">

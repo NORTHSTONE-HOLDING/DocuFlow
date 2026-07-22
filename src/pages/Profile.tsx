@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import type { CompanyProfile } from '../types/erp';
+import type { PlanId } from '../types/document';
 import { fetchAresCompany } from '../utils/ares';
+import { FeatureGate, useFeatureAccess } from '../components/FeatureGate';
+import { PlanSwitcher } from '../components/PlanSwitcher';
 
 interface ProfileProps {
   profile: CompanyProfile;
   onSave: (profile: CompanyProfile) => void;
+  planId: PlanId;
+  onChangePlan: (planId: PlanId) => void;
 }
 
-export function Profile({ profile, onSave }: ProfileProps) {
+export function Profile({ profile, onSave, planId, onChangePlan }: ProfileProps) {
   const [form, setForm] = useState(profile);
   const [saved, setSaved] = useState(false);
   const [aresLoading, setAresLoading] = useState(false);
   const [aresMsg, setAresMsg] = useState<string | null>(null);
+  const { require } = useFeatureAccess();
 
   useEffect(() => {
     setForm(profile);
@@ -20,6 +26,7 @@ export function Profile({ profile, onSave }: ProfileProps) {
   const set = (partial: Partial<CompanyProfile>) => setForm((f) => ({ ...f, ...partial }));
 
   const loadAres = async () => {
+    if (!require('ares')) return;
     setAresLoading(true);
     setAresMsg(null);
     try {
@@ -45,6 +52,14 @@ export function Profile({ profile, onSave }: ProfileProps) {
         </div>
       </div>
 
+      <section className="settings-card plan-switcher-card">
+        <h2>Aktuální tarif</h2>
+        <p className="wizard-panel__sub">
+          Simulace předplatného pro testování omezení funkcí. Změna se uloží lokálně.
+        </p>
+        <PlanSwitcher planId={planId} onChange={onChangePlan} />
+      </section>
+
       <section className="settings-card">
         <h2>Firemní údaje</h2>
         <div className="form-stack">
@@ -56,9 +71,16 @@ export function Profile({ profile, onSave }: ProfileProps) {
             IČO
             <div className="ico-row">
               <input value={form.ico} onChange={(e) => set({ ico: e.target.value })} placeholder="12345678" />
-              <button type="button" className="btn btn--secondary btn--sm" disabled={aresLoading} onClick={() => void loadAres()}>
-                {aresLoading ? 'Načítám…' : 'Načíst z ARES'}
-              </button>
+              <FeatureGate feature="ares" compact className="feature-gate--inline">
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  disabled={aresLoading}
+                  onClick={() => void loadAres()}
+                >
+                  {aresLoading ? 'Načítám…' : 'Načíst z ARES'}
+                </button>
+              </FeatureGate>
             </div>
           </label>
           <label>

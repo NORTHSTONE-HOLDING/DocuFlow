@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { TEMPLATES, getTemplate } from '../data/templates';
+import { FREE_TEMPLATE_IDS } from '../data/features';
 import type { DocumentRecord, PartyInfo, TemplateId, WizardState } from '../types/document';
 import { createId } from '../utils/storage';
 import { downloadPdf, openMailto, printDocument } from '../utils/pdf';
@@ -9,6 +10,7 @@ import { fetchAresCompany } from '../utils/ares';
 import { SignaturePad } from '../components/SignaturePad';
 import { EmailModal } from '../components/EmailModal';
 import { AiAssistant } from '../components/AiAssistant';
+import { FeatureGate, useFeatureAccess } from '../components/FeatureGate';
 
 const emptyParty = (): PartyInfo => ({ name: '', idNumber: '', ico: '', dic: '', address: '' });
 
@@ -97,6 +99,7 @@ function TemplateIcon({ icon }: { icon: string }) {
 export function NewDocument({ onSave, canCreate, onBlocked, onDocumentCreated }: NewDocumentProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { can, openUpgrade, planId } = useFeatureAccess();
   const presetTemplate = (location.state as { templateId?: TemplateId } | null)?.templateId ?? null;
   const [wizard, setWizard] = useState<WizardState>(() => buildInitialWizard(presetTemplate));
   const [savedDoc, setSavedDoc] = useState<DocumentRecord | null>(null);
@@ -105,8 +108,19 @@ export function NewDocument({ onSave, canCreate, onBlocked, onDocumentCreated }:
   const [errors, setErrors] = useState<string | null>(null);
 
   const steps = ['Šablona', 'Strany', 'Specifikace', 'Podpisy'];
+  const templateAllowed = (id: TemplateId) => can('advancedTemplates') || FREE_TEMPLATE_IDS.has(id);
+
+  useEffect(() => {
+    if (wizard.templateId && !(can('advancedTemplates') || FREE_TEMPLATE_IDS.has(wizard.templateId))) {
+      setWizard((w) => ({ ...w, templateId: null }));
+    }
+  }, [planId, can, wizard.templateId]);
 
   const selectTemplate = (id: TemplateId) => {
+    if (!templateAllowed(id)) {
+      openUpgrade('advancedTemplates');
+      return;
+    }
     const t = getTemplate(id);
     setWizard((w) => ({
       ...w,
@@ -315,29 +329,42 @@ export function NewDocument({ onSave, canCreate, onBlocked, onDocumentCreated }:
               <option value="" disabled>
                 — Vyberte šablonu —
               </option>
-              {TEMPLATES.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
+              {TEMPLATES.map((t) => {
+                const locked = !templateAllowed(t.id);
+                return (
+                  <option key={t.id} value={t.id} disabled={locked}>
+                    {t.label}
+                    {locked ? ' · Vyžaduje Premium' : ''}
+                  </option>
+                );
+              })}
             </select>
           </label>
 
           <div className="template-grid">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className={`template-card ${wizard.templateId === t.id ? 'is-selected' : ''}`}
-                onClick={() => selectTemplate(t.id)}
-              >
-                <span className="template-card__icon">
-                  <TemplateIcon icon={t.icon} />
-                </span>
-                <strong>{t.label}</strong>
-                <span>{t.description}</span>
-              </button>
-            ))}
+            {TEMPLATES.map((t) => {
+              const locked = !templateAllowed(t.id);
+              const card = (
+                <button
+                  type="button"
+                  className={`template-card ${wizard.templateId === t.id ? 'is-selected' : ''}`}
+                  onClick={() => selectTemplate(t.id)}
+                >
+                  <span className="template-card__icon">
+                    <TemplateIcon icon={t.icon} />
+                  </span>
+                  <strong>{t.label}</strong>
+                  <span>{t.description}</span>
+                </button>
+              );
+              return locked ? (
+                <FeatureGate key={t.id} feature="advancedTemplates" className="feature-gate--template">
+                  {card}
+                </FeatureGate>
+              ) : (
+                <div key={t.id}>{card}</div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -479,8 +506,10 @@ function PartyForm({
 }) {
   const [aresLoading, setAresLoading] = useState(false);
   const [aresMsg, setAresMsg] = useState<string | null>(null);
+  const { require } = useFeatureAccess();
 
   const loadAres = async () => {
+    if (!require('ares')) return;
     setAresMsg(null);
     setAresLoading(true);
     try {
@@ -522,9 +551,16 @@ function PartyForm({
             inputMode="numeric"
           />
           {enableAres && (
-            <button type="button" className="btn btn--secondary btn--sm" disabled={aresLoading} onClick={() => void loadAres()}>
-              {aresLoading ? 'Načítám…' : 'Načíst z ARES'}
-            </button>
+            <FeatureGate feature="ares" compact className="feature-gate--inline">
+              <button
+                type="button"
+                className="btn btn--secondary btn--sm"
+                disabled={aresLoading}
+                onClick={() => void loadAres()}
+              >
+                {aresLoading ? 'Načítám…' : 'Načíst z ARES'}
+              </button>
+            </FeatureGate>
           )}
         </div>
       </label>

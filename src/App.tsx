@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
 import { AuthModal } from './components/AuthModal';
+import { FeatureAccessProvider } from './components/FeatureGate';
 import { PaywallModal } from './components/PaywallModal';
 import { useDocuments, useSettings } from './hooks/useDocuments';
 import { useAuth } from './hooks/useAuth';
@@ -62,104 +63,112 @@ export default function App() {
   }
 
   return (
-    <AppShell
-      mobileOpen={mobileOpen}
-      onCloseMobile={() => setMobileOpen(false)}
-      onToggleMobile={() => setMobileOpen((v) => !v)}
-      planName={plan.name}
-      planId={auth.planId}
-      userName={auth.user?.name ?? null}
-      freeRemaining={freeRemaining}
-      onOpenLogin={() => openAuth('login')}
-      onOpenSignup={() => openAuth('signup')}
-      onSignOut={signOut}
-      supabaseReady={isSupabaseConfigured()}
-    >
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Dashboard
-              documentsCountLegacy={documents.length}
-              projects={projects}
-              docs={docs}
-              profile={profile}
-              auth={auth}
-              canCreate={canCreate}
-              onBlocked={() => setPaywallOpen(true)}
-              onDocumentCreated={recordDocumentCreated}
-              onRefresh={refresh}
-              onDeleteProject={removeProject}
-            />
-          }
-        />
-        <Route
-          path="/zakazka/:projectId"
-          element={
-            <ProjectDetail
-              profile={profile}
-              projects={projects}
-              onRefresh={refresh}
-              canCreate={canCreate}
-              onBlocked={() => setPaywallOpen(true)}
-              onDocumentCreated={recordDocumentCreated}
-            />
-          }
-        />
-        <Route path="/profil" element={<Profile profile={profile} onSave={saveProfile} />} />
-        <Route
-          path="/novy"
-          element={
-            <NewDocument
-              onSave={save}
-              canCreate={canCreate}
-              onBlocked={() => setPaywallOpen(true)}
-              onDocumentCreated={recordDocumentCreated}
-            />
-          }
-        />
-        <Route path="/sablony" element={<Templates />} />
-        <Route path="/audit" element={<AiAudit planId={auth.planId} onUpgradeHint={() => undefined} />} />
-        <Route
-          path="/cenik"
-          element={
-            <Pricing
-              currentPlanId={auth.planId}
-              onUpgrade={(id: PlanId) => upgradePlan(id)}
-              isLoggedIn={!!auth.user}
-              onOpenAuth={() => openAuth('signup')}
-            />
-          }
-        />
-        <Route
-          path="/nastaveni"
-          element={
-            <Settings
-              settings={settings}
-              onUpdate={update}
-              auth={auth}
-              onOpenAuth={() => openAuth('login')}
-              onSignOut={signOut}
-              onUpgrade={(id) => upgradePlan(id)}
-            />
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+    <FeatureAccessProvider planId={auth.planId}>
+      <AppShell
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+        onToggleMobile={() => setMobileOpen((v) => !v)}
+        planName={plan.name}
+        planId={auth.planId}
+        userName={auth.user?.name ?? null}
+        freeRemaining={freeRemaining}
+        onOpenLogin={() => openAuth('login')}
+        onOpenSignup={() => openAuth('signup')}
+        onSignOut={signOut}
+        onChangePlan={upgradePlan}
+        supabaseReady={isSupabaseConfigured()}
+      >
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Dashboard
+                documentsCountLegacy={documents.length}
+                projects={projects}
+                docs={docs}
+                profile={profile}
+                auth={auth}
+                canCreate={canCreate}
+                onBlocked={() => setPaywallOpen(true)}
+                onDocumentCreated={recordDocumentCreated}
+                onRefresh={refresh}
+                onDeleteProject={removeProject}
+              />
+            }
+          />
+          <Route
+            path="/zakazka/:projectId"
+            element={
+              <ProjectDetail
+                profile={profile}
+                projects={projects}
+                onRefresh={refresh}
+                canCreate={canCreate}
+                onBlocked={() => setPaywallOpen(true)}
+                onDocumentCreated={recordDocumentCreated}
+              />
+            }
+          />
+          <Route
+            path="/profil"
+            element={
+              <Profile profile={profile} onSave={saveProfile} planId={auth.planId} onChangePlan={upgradePlan} />
+            }
+          />
+          <Route
+            path="/novy"
+            element={
+              <NewDocument
+                onSave={save}
+                canCreate={canCreate}
+                onBlocked={() => setPaywallOpen(true)}
+                onDocumentCreated={recordDocumentCreated}
+              />
+            }
+          />
+          <Route path="/sablony" element={<Templates />} />
+          <Route path="/audit" element={<AiAudit />} />
+          <Route
+            path="/cenik"
+            element={
+              <Pricing
+                currentPlanId={auth.planId}
+                onUpgrade={(id: PlanId) => upgradePlan(id)}
+                isLoggedIn={!!auth.user}
+                onOpenAuth={() => openAuth('signup')}
+              />
+            }
+          />
+          <Route
+            path="/nastaveni"
+            element={
+              <Settings
+                settings={settings}
+                onUpdate={update}
+                auth={auth}
+                onOpenAuth={() => openAuth('login')}
+                onSignOut={signOut}
+                onUpgrade={(id) => upgradePlan(id)}
+              />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
 
-      <AuthModal
-        open={authOpen}
-        mode={authMode}
-        onClose={() => setAuthOpen(false)}
-        onSignIn={signIn}
-        onSignUp={signUp}
-      />
-      <PaywallModal
-        open={paywallOpen}
-        documentsCreated={auth.documentsCreated}
-        onClose={() => setPaywallOpen(false)}
-        onUpgrade={(id) => upgradePlan(id)}
-      />
-    </AppShell>
+        <AuthModal
+          open={authOpen}
+          mode={authMode}
+          onClose={() => setAuthOpen(false)}
+          onSignIn={signIn}
+          onSignUp={signUp}
+        />
+        <PaywallModal
+          open={paywallOpen}
+          documentsCreated={auth.documentsCreated}
+          onClose={() => setPaywallOpen(false)}
+          onUpgrade={(id) => upgradePlan(id)}
+        />
+      </AppShell>
+    </FeatureAccessProvider>
   );
 }

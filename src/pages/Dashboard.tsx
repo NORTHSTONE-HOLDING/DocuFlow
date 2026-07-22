@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BillingWidget } from '../components/BillingWidget';
 import { DebtCollectorModal } from '../components/DebtCollectorModal';
+import { FeatureGate, useFeatureAccess } from '../components/FeatureGate';
 import type { AuthState } from '../types/document';
 import type { CompanyProfile, Project, WorkflowDocument, WorkflowStage } from '../types/erp';
 import { STAGE_LABELS } from '../types/erp';
@@ -44,6 +45,7 @@ export function Dashboard({
   onDeleteProject,
 }: DashboardProps) {
   const navigate = useNavigate();
+  const { require, openUpgrade, can } = useFeatureAccess();
   const [debtTarget, setDebtTarget] = useState<{ project: Project; invoice: WorkflowDocument } | null>(null);
 
   const startProject = () => {
@@ -126,13 +128,18 @@ export function Dashboard({
                   <strong>{formatCurrency(p.value)}</strong>
                   <span>{formatDate(p.updatedAt || p.createdAt)}</span>
                   {unpaid && (
-                    <button
-                      type="button"
-                      className="btn btn--debt btn--sm"
-                      onClick={() => setDebtTarget({ project: p, invoice: unpaid })}
-                    >
-                      🤖 Urgovat neplatiče přes AI
-                    </button>
+                    <FeatureGate feature="debtCollector" compact className="feature-gate--inline">
+                      <button
+                        type="button"
+                        className="btn btn--debt btn--sm"
+                        onClick={() => {
+                          if (!require('debtCollector')) return;
+                          setDebtTarget({ project: p, invoice: unpaid });
+                        }}
+                      >
+                        🤖 Urgovat neplatiče přes AI
+                      </button>
+                    </FeatureGate>
                   )}
                   <button type="button" className="btn btn--danger btn--sm" onClick={() => onDeleteProject(p.id)}>
                     Smazat
@@ -145,9 +152,15 @@ export function Dashboard({
       )}
 
       <div className="dashboard-links">
-        <Link to="/audit" className="btn btn--secondary">
-          AI Právní Audit
-        </Link>
+        {can('aiAudit') ? (
+          <Link to="/audit" className="btn btn--secondary">
+            AI Právní Audit
+          </Link>
+        ) : (
+          <button type="button" className="btn btn--secondary" onClick={() => openUpgrade('aiAudit')}>
+            AI Právní Audit · Vyžaduje Premium
+          </button>
+        )}
         <Link to="/profil" className="btn btn--ghost">
           Můj Profil / Moje Firma
         </Link>

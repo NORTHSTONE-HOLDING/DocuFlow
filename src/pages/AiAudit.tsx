@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TEMPLATES } from '../data/templates';
-import type { PlanId } from '../types/document';
 import { hasOpenAiKey } from '../utils/ai';
 import { AUDIT_SCAN_STEPS, runLegalAudit, type LegalAuditResult } from '../utils/legalAudit';
-
-interface AiAuditProps {
-  planId: PlanId;
-  onUpgradeHint: () => void;
-}
+import { FeatureGate, useFeatureAccess } from '../components/FeatureGate';
 
 const SAMPLE_CONTRACT = `SMLOUVA O DÍLO
 uzavřená dle § 2586 a násl. občanského zákoníku
@@ -19,7 +14,9 @@ uzavřená dle § 2586 a násl. občanského zákoníku
 4. Smlouva se automaticky prolonguje o další rok, pokud není vypovězena 90 dní předem. Zhotovitel může smlouvu vypovědět okamžitě bez udání důvodu.
 5. Veškeré spory rozhodne rozhodce určený výhradně zhotovitelem.`;
 
-export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
+export function AiAudit() {
+  const { can, require } = useFeatureAccess();
+  const allowed = can('aiAudit');
   const [text, setText] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -29,7 +26,6 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const live = hasOpenAiKey();
-  const isBusinessPlus = planId === 'business' || planId === 'enterprise';
 
   const stepLabel = useMemo(() => AUDIT_SCAN_STEPS[Math.min(stepIdx, AUDIT_SCAN_STEPS.length - 1)], [stepIdx]);
 
@@ -67,6 +63,7 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
   };
 
   const startAudit = async () => {
+    if (!require('aiAudit')) return;
     setError(null);
     setResult(null);
     setScanning(true);
@@ -74,7 +71,6 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
       const audit = await runLegalAudit(text);
       setProgress(100);
       setResult(audit);
-      if (!isBusinessPlus) onUpgradeHint();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Audit se nezdařil.');
     } finally {
@@ -82,22 +78,8 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
     }
   };
 
-  return (
-    <div className="page fade-in audit-page">
-      <div className="page__header">
-        <div>
-          <p className="eyebrow">Killer Feature</p>
-          <h1>AI Právní Audit</h1>
-          <p className="page__sub">
-            Nahrajte cizí smlouvu a nechte elitního AI právníka odhalit skryté háčky, pokuty a nefér podmínky —
-            hlavní výhoda tarifů Business a Full Enterprise.
-          </p>
-        </div>
-        <span className={`plan-chip ${isBusinessPlus ? 'plan-chip--business' : 'plan-chip--premium'}`}>
-          {isBusinessPlus ? 'Business+ odemčeno' : 'Business / Enterprise'}
-        </span>
-      </div>
-
+  const workspace = (
+    <>
       <div className="audit-hero">
         <div className="audit-hero__copy">
           <h2>AI Audit cizí smlouvy</h2>
@@ -112,8 +94,8 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
           </ul>
         </div>
         <div className="audit-hero__badge">
-          <strong>890–1490 Kč</strong>
-          <span>Hlavní prodejní argument Business & Enterprise</span>
+          <strong>od 390 Kč</strong>
+          <span>Dostupné v tarifu Premium a vyšším</span>
         </div>
       </div>
 
@@ -176,7 +158,7 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
             className="audit-textarea"
             rows={14}
             value={text}
-            disabled={scanning}
+            disabled={scanning || !allowed}
             onChange={(e) => setText(e.target.value)}
             placeholder="Vložte sem celý text cizí smlouvy ke kontrole…"
           />
@@ -185,7 +167,7 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
         <button
           type="button"
           className="btn btn--primary btn--lg audit-scan-btn"
-          disabled={scanning || text.trim().length < 40}
+          disabled={scanning || text.trim().length < 40 || !allowed}
           onClick={() => void startAudit()}
         >
           {scanning ? (
@@ -281,21 +263,29 @@ export function AiAudit({ planId, onUpgradeHint }: AiAuditProps) {
               </header>
               <p className="audit-card__summary">{result.summary}</p>
             </article>
-
-            {!isBusinessPlus && (
-              <div className="audit-upsell">
-                <div>
-                  <strong>Chcete audit v ostrém Business režimu?</strong>
-                  <p>Neomezené skeny, prioritní šablony a týmová analytika od 890 Kč / měsíc.</p>
-                </div>
-                <Link to="/cenik" className="btn btn--primary">
-                  Odemknout Business
-                </Link>
-              </div>
-            )}
           </div>
         )}
       </section>
+    </>
+  );
+
+  return (
+    <div className="page fade-in audit-page">
+      <div className="page__header">
+        <div>
+          <p className="eyebrow">Killer Feature</p>
+          <h1>AI Právní Audit</h1>
+          <p className="page__sub">
+            Nahrajte cizí smlouvu a nechte elitního AI právníka odhalit skryté háčky, pokuty a nefér podmínky —
+            dostupné od tarifu Premium.
+          </p>
+        </div>
+        <span className={`plan-chip ${allowed ? 'plan-chip--premium' : 'plan-chip--locked'}`}>
+          {allowed ? 'Premium+ odemčeno' : 'Vyžaduje Premium'}
+        </span>
+      </div>
+
+      {allowed ? workspace : <FeatureGate feature="aiAudit">{workspace}</FeatureGate>}
     </div>
   );
 }

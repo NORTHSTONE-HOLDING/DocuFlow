@@ -1,12 +1,15 @@
 import { NavLink } from 'react-router-dom';
 import { Logo } from './Logo';
+import { PlanSwitcher } from './PlanSwitcher';
+import { useFeatureAccess } from './FeatureGate';
+import { lockBadgeLabel, type FeatureKey } from '../data/features';
 import type { PlanId } from '../types/document';
 
 const NAV = [
   { to: '/', label: 'Nástěnka', icon: 'dashboard' },
   { to: '/profil', label: 'Můj Profil / Firma', icon: 'profile' },
   { to: '/novy', label: 'Nový dokument', icon: 'new' },
-  { to: '/audit', label: 'AI Právní Audit', icon: 'audit' },
+  { to: '/audit', label: 'AI Právní Audit', icon: 'audit', feature: 'aiAudit' as FeatureKey },
   { to: '/sablony', label: 'Šablony', icon: 'templates' },
   { to: '/cenik', label: 'Ceník', icon: 'pricing' },
   { to: '/nastaveni', label: 'Nastavení', icon: 'settings' },
@@ -24,6 +27,7 @@ interface AppShellProps {
   onOpenLogin: () => void;
   onOpenSignup: () => void;
   onSignOut: () => void;
+  onChangePlan: (planId: PlanId) => void;
   supabaseReady?: boolean;
 }
 
@@ -93,8 +97,11 @@ export function AppShell({
   onOpenLogin,
   onOpenSignup,
   onSignOut,
+  onChangePlan,
   supabaseReady = false,
 }: AppShellProps) {
+  const { can, openUpgrade } = useFeatureAccess();
+
   return (
     <div className="shell">
       <div className="shell__glow shell__glow--a" aria-hidden />
@@ -116,21 +123,36 @@ export function AppShell({
           <em>{planId === 'free' ? `Zbývá ${freeRemaining === Infinity ? '∞' : freeRemaining}` : 'Active'}</em>
         </div>
 
+        <PlanSwitcher planId={planId} onChange={onChangePlan} compact />
+
         <nav className="sidebar__nav" aria-label="Hlavní navigace">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}
-              onClick={onCloseMobile}
-            >
-              <span className="nav-link__icon">
-                <NavIcon name={item.icon} />
-              </span>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {NAV.map((item) => {
+            const feature = 'feature' in item ? item.feature : undefined;
+            const locked = feature ? !can(feature) : false;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? 'nav-link--active' : ''} ${locked ? 'nav-link--locked' : ''}`
+                }
+                onClick={(e) => {
+                  if (locked && feature) {
+                    e.preventDefault();
+                    openUpgrade(feature);
+                  }
+                  onCloseMobile();
+                }}
+              >
+                <span className="nav-link__icon">
+                  <NavIcon name={item.icon} />
+                </span>
+                <span>{item.label}</span>
+                {locked && feature && <em className="nav-lock-badge">{lockBadgeLabel(feature)}</em>}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="sidebar__auth">
@@ -172,9 +194,12 @@ export function AppShell({
             <Logo compact />
             <span className="topbar__title">DocuFlow</span>
           </div>
-          <div className="premium-badge premium-badge--mobile">
-            <span className="premium-badge__dot" />
-            {planName}
+          <div className="topbar__plan">
+            <PlanSwitcher planId={planId} onChange={onChangePlan} compact />
+            <div className="premium-badge premium-badge--mobile">
+              <span className="premium-badge__dot" />
+              {planName}
+            </div>
           </div>
         </header>
         <main className="content">{children}</main>
