@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocuFlow</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <h1>DocuFlow</h1>
+        <p class="tagline">Simple document workflow tracker</p>
+      </header>
+
+      <main class="container">
+        <section class="creator">
+          <form id="doc-form" autocomplete="off">
+            <input
+              id="doc-title"
+              type="text"
+              placeholder="New document title…"
+              aria-label="Document title"
+              required
+            />
+            <button type="submit">Add document</button>
+          </form>
+        </section>
+
+        <section class="board">
+          <ul id="doc-list" class="doc-list" aria-live="polite"></ul>
+          <p id="empty-state" class="empty-state">No documents yet. Add one above to start a flow.</p>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
