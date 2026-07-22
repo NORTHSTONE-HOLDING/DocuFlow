@@ -50,8 +50,11 @@ npm run preview
 ## Funkce
 
 - **Nástěnka** s historií dokumentů v LocalStorage
+- **Auth + ceník**: Free (3 dok.) / Premium 390 Kč / Business 890 Kč / Enterprise 1490 Kč
 - **Vícekrokový průvodce**: šablona → strany → specifikace → podpisy
+- **České šablony**: předávací protokol, úřední žádost, smlouva o dílo, generální plná moc…
+- **ARES IČO lookup** s autofillem (mock fallback při CORS)
+- **AI Asistent** pro doplnění smluvních klauzulí
 - **HTML5 Canvas podpisy** (mobilní fullscreen modal)
 - **Akce**: Stáhnout PDF, Poslat e-mailem, Vytisknout
-- Responzivní layout (desktop / tablet / mobil)
-- Tmavý emerald/mint korporátní vzhled (komplementární k FeedFlow)
+- Responzivní layout + tmavý/světlý korporátní režim
