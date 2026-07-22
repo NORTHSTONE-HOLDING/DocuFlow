@@ -1,16 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { DocumentRecord } from '../types/document';
+import type { AuthState, DocumentRecord } from '../types/document';
 import { formatCurrency, formatDate } from '../utils/format';
 import { downloadPdf, openMailto, printDocument } from '../utils/pdf';
 import { EmailModal } from '../components/EmailModal';
+import { BillingWidget } from '../components/BillingWidget';
 
 interface DashboardProps {
   documents: DocumentRecord[];
   onDelete: (id: string) => void;
+  auth: AuthState;
+  canCreate: boolean;
+  onBlocked: () => void;
 }
 
-export function Dashboard({ documents, onDelete }: DashboardProps) {
+export function Dashboard({ documents, onDelete, auth, canCreate, onBlocked }: DashboardProps) {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [emailDoc, setEmailDoc] = useState<DocumentRecord | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -36,6 +40,13 @@ export function Dashboard({ documents, onDelete }: DashboardProps) {
     }
   };
 
+  const newDocClick = (e: React.MouseEvent) => {
+    if (!canCreate) {
+      e.preventDefault();
+      onBlocked();
+    }
+  };
+
   return (
     <div className="page fade-in">
       <div className="page__header">
@@ -44,13 +55,15 @@ export function Dashboard({ documents, onDelete }: DashboardProps) {
           <h1>Vaše dokumenty</h1>
           <p className="page__sub">Historie generovaných smluv uložená lokálně v prohlížeči.</p>
         </div>
-        <Link to="/novy" className="btn btn--primary">
+        <Link to="/novy" className="btn btn--primary" onClick={newDocClick}>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
           </svg>
           Nový dokument
         </Link>
       </div>
+
+      <BillingWidget auth={auth} />
 
       <div className="stat-row">
         <div className="stat">
@@ -67,6 +80,17 @@ export function Dashboard({ documents, onDelete }: DashboardProps) {
         </div>
       </div>
 
+      {(auth.planId === 'business' || auth.planId === 'enterprise') && (
+        <div className="analytics-strip">
+          <strong>Business analytika</strong>
+          <span>
+            Průměrná hodnota dokumentu:{' '}
+            {formatCurrency(stats.total ? Math.round(stats.value / stats.total) : 0)}
+          </span>
+          <span>Aktivita: {stats.month} dok. tento měsíc</span>
+        </div>
+      )}
+
       {documents.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state__icon" aria-hidden>
@@ -76,8 +100,8 @@ export function Dashboard({ documents, onDelete }: DashboardProps) {
             </svg>
           </div>
           <h2>Zatím žádné dokumenty</h2>
-          <p>Vytvořte první smlouvu nebo fakturu — vše zůstane uloženo lokálně.</p>
-          <Link to="/novy" className="btn btn--primary">
+          <p>Vytvořte první smlouvu — Free plán zahrnuje 3 dokumenty zdarma.</p>
+          <Link to="/novy" className="btn btn--primary" onClick={newDocClick}>
             Spustit průvodce
           </Link>
         </div>
@@ -127,7 +151,13 @@ export function Dashboard({ documents, onDelete }: DashboardProps) {
                     </button>
                     {menuId === doc.id && (
                       <div className="actions-menu__dropdown">
-                        <button type="button" onClick={() => { onDelete(doc.id); setMenuId(null); }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onDelete(doc.id);
+                            setMenuId(null);
+                          }}
+                        >
                           Smazat
                         </button>
                       </div>

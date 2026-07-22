@@ -39,15 +39,17 @@ export function buildDocumentHtml(doc: DocumentRecord): string {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:14px;">
         <div style="border:1px solid #e2e8f0;padding:14px;border-radius:4px;">
           <strong style="display:block;margin-bottom:8px;color:#0f172a;">Strana A</strong>
-          <div><strong>Jméno:</strong> ${escapeHtml(doc.partyA.name)}</div>
-          <div><strong>RČ / IČO:</strong> ${escapeHtml(doc.partyA.idNumber)}</div>
-          <div><strong>Adresa:</strong> ${escapeHtml(doc.partyA.address)}</div>
+          <div><strong>Název / jméno:</strong> ${escapeHtml(doc.partyA.name)}</div>
+          <div><strong>IČO:</strong> ${escapeHtml(doc.partyA.ico || doc.partyA.idNumber || '—')}</div>
+          <div><strong>DIČ:</strong> ${escapeHtml(doc.partyA.dic || '—')}</div>
+          <div><strong>Adresa sídla:</strong> ${escapeHtml(doc.partyA.address)}</div>
         </div>
         <div style="border:1px solid #e2e8f0;padding:14px;border-radius:4px;">
           <strong style="display:block;margin-bottom:8px;color:#0f172a;">Strana B (klient)</strong>
-          <div><strong>Jméno:</strong> ${escapeHtml(doc.partyB.name)}</div>
-          <div><strong>RČ / IČO:</strong> ${escapeHtml(doc.partyB.idNumber)}</div>
-          <div><strong>Adresa:</strong> ${escapeHtml(doc.partyB.address)}</div>
+          <div><strong>Název / jméno:</strong> ${escapeHtml(doc.partyB.name)}</div>
+          <div><strong>IČO:</strong> ${escapeHtml(doc.partyB.ico || doc.partyB.idNumber || '—')}</div>
+          <div><strong>DIČ:</strong> ${escapeHtml(doc.partyB.dic || '—')}</div>
+          <div><strong>Adresa sídla:</strong> ${escapeHtml(doc.partyB.address)}</div>
         </div>
       </div>
 

@@ -5,10 +5,16 @@ import type { DocumentRecord, PartyInfo, TemplateId, WizardState } from '../type
 import { createId } from '../utils/storage';
 import { downloadPdf, openMailto, printDocument } from '../utils/pdf';
 import { formatCurrency } from '../utils/format';
+import { fetchAresCompany } from '../utils/ares';
 import { SignaturePad } from '../components/SignaturePad';
 import { EmailModal } from '../components/EmailModal';
+import { AiAssistant } from '../components/AiAssistant';
 
-const emptyParty = (): PartyInfo => ({ name: '', idNumber: '', address: '' });
+const emptyParty = (): PartyInfo => ({ name: '', idNumber: '', ico: '', dic: '', address: '' });
+
+function defaultItemFor(id: TemplateId): string {
+  return getTemplate(id).defaultItem;
+}
 
 function buildInitialWizard(templateId?: TemplateId | null): WizardState {
   const base: WizardState = {
@@ -30,22 +36,34 @@ function buildInitialWizard(templateId?: TemplateId | null): WizardState {
     templateId,
     terms: t.defaultTerms,
     documentName: t.defaultName,
-    itemDescription:
-      templateId === 'faktura'
-        ? 'Fakturované plnění dle objednávky.'
-        : templateId === 'plna-moc'
-          ? 'Zastupování ve věci uvedené níže.'
-          : 'Předmět smlouvy dle dohody stran.',
+    itemDescription: defaultItemFor(templateId),
   };
 }
 
 interface NewDocumentProps {
   onSave: (doc: DocumentRecord) => void;
+  canCreate: boolean;
+  onBlocked: () => void;
+  onDocumentCreated: () => void;
 }
 
 function TemplateIcon({ icon }: { icon: string }) {
   const common = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6 } as const;
   switch (icon) {
+    case 'handover':
+      return (
+        <svg {...common}>
+          <path d="M4 14h7l2-3 2 3h5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M8 14v5a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-5M9 9V5h6v4" strokeLinecap="round" />
+        </svg>
+      );
+    case 'letter':
+      return (
+        <svg {...common}>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 8l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case 'contract':
       return (
         <svg {...common}>
@@ -76,7 +94,7 @@ function TemplateIcon({ icon }: { icon: string }) {
   }
 }
 
-export function NewDocument({ onSave }: NewDocumentProps) {
+export function NewDocument({ onSave, canCreate, onBlocked, onDocumentCreated }: NewDocumentProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const presetTemplate = (location.state as { templateId?: TemplateId } | null)?.templateId ?? null;
@@ -95,12 +113,7 @@ export function NewDocument({ onSave }: NewDocumentProps) {
       templateId: id,
       terms: t.defaultTerms,
       documentName: t.defaultName,
-      itemDescription:
-        id === 'faktura'
-          ? 'Fakturované plnění dle objednávky.'
-          : id === 'plna-moc'
-            ? 'Zastupování ve věci uvedené níže.'
-            : 'Předmět smlouvy dle dohody stran.',
+      itemDescription: defaultItemFor(id),
     }));
   };
 
@@ -112,7 +125,7 @@ export function NewDocument({ onSave }: NewDocumentProps) {
     }
     if (step === 2) {
       if (!wizard.partyA.name.trim() || !wizard.partyB.name.trim()) {
-        setErrors('Vyplňte jména obou stran.');
+        setErrors('Vyplňte názvy / jména obou stran.');
         return false;
       }
     }
@@ -134,6 +147,10 @@ export function NewDocument({ onSave }: NewDocumentProps) {
 
   const finalize = () => {
     if (!wizard.templateId) return;
+    if (!canCreate) {
+      onBlocked();
+      return;
+    }
     if (!wizard.signatureA || !wizard.signatureB) {
       setErrors('Obě strany musí dokument podepsat.');
       return;
@@ -156,6 +173,7 @@ export function NewDocument({ onSave }: NewDocumentProps) {
       signatureB: wizard.signatureB,
     };
     onSave(doc);
+    onDocumentCreated();
     setSavedDoc(doc);
   };
 
@@ -225,6 +243,10 @@ export function NewDocument({ onSave }: NewDocumentProps) {
               type="button"
               className="btn btn--ghost"
               onClick={() => {
+                if (!canCreate) {
+                  onBlocked();
+                  return;
+                }
                 setSavedDoc(null);
                 setWizard(buildInitialWizard());
               }}
@@ -249,7 +271,7 @@ export function NewDocument({ onSave }: NewDocumentProps) {
         <div>
           <p className="eyebrow">Průvodce</p>
           <h1>Nový dokument</h1>
-          <p className="page__sub">Čtyři kroky k formálnímu českému dokumentu s podpisy.</p>
+          <p className="page__sub">České šablony, ARES lookup a AI asistent — čtyři kroky k formálnímu dokumentu.</p>
         </div>
       </div>
 
@@ -270,7 +292,28 @@ export function NewDocument({ onSave }: NewDocumentProps) {
       {wizard.step === 1 && (
         <section className="wizard-panel">
           <h2>Výběr šablony</h2>
-          <p className="wizard-panel__sub">Vyberte typ dokumentu — velké interaktivní karty s náhledem.</p>
+          <p className="wizard-panel__sub">Vyberte typ dokumentu z rozbalovacího seznamu nebo klikněte na kartu.</p>
+
+          <label className="template-select">
+            České šablony dokumentů
+            <select
+              value={wizard.templateId ?? ''}
+              onChange={(e) => {
+                const id = e.target.value as TemplateId;
+                if (id) selectTemplate(id);
+              }}
+            >
+              <option value="" disabled>
+                — Vyberte šablonu —
+              </option>
+              {TEMPLATES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <div className="template-grid">
             {TEMPLATES.map((t) => (
               <button
@@ -293,7 +336,9 @@ export function NewDocument({ onSave }: NewDocumentProps) {
       {wizard.step === 2 && (
         <section className="wizard-panel">
           <h2>Smluvní strany</h2>
-          <p className="wizard-panel__sub">Údaje strany A a strany B — vedle sebe na desktopu, pod sebou na mobilu.</p>
+          <p className="wizard-panel__sub">
+            Vyplňte údaje stran. U partnera můžete načíst firmu z ARES podle IČO (živě nebo mock při CORS).
+          </p>
           <div className="parties-grid">
             <PartyForm
               title="Strana A"
@@ -301,18 +346,19 @@ export function NewDocument({ onSave }: NewDocumentProps) {
               onChange={(partyA) => setWizard((w) => ({ ...w, partyA }))}
             />
             <PartyForm
-              title="Strana B (klient)"
+              title="Strana B (klient / partner)"
               party={wizard.partyB}
               onChange={(partyB) => setWizard((w) => ({ ...w, partyB }))}
+              enableAres
             />
           </div>
         </section>
       )}
 
       {wizard.step === 3 && (
-        <section className="wizard-panel">
+        <section className="wizard-panel wizard-panel--ai">
           <h2>Specifikace smlouvy</h2>
-          <p className="wizard-panel__sub">Dynamická pole pro podmínky, popis a cenu v CZK.</p>
+          <p className="wizard-panel__sub">Dynamická pole pro podmínky, popis a cenu. Použijte AI asistenta pro doplnění klauzulí.</p>
           <div className="form-stack">
             <label>
               Název dokumentu
@@ -332,7 +378,7 @@ export function NewDocument({ onSave }: NewDocumentProps) {
             <label>
               Smluvní ustanovení / podmínky
               <textarea
-                rows={6}
+                rows={8}
                 value={wizard.terms}
                 onChange={(e) => setWizard((w) => ({ ...w, terms: e.target.value }))}
               />
@@ -348,6 +394,10 @@ export function NewDocument({ onSave }: NewDocumentProps) {
               />
             </label>
           </div>
+          <AiAssistant
+            terms={wizard.terms}
+            onApply={(terms) => setWizard((w) => ({ ...w, terms }))}
+          />
         </section>
       )}
 
@@ -388,7 +438,17 @@ export function NewDocument({ onSave }: NewDocumentProps) {
             Pokračovat
           </button>
         ) : (
-          <button type="button" className="btn btn--primary" onClick={finalize}>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => {
+              if (!canCreate) {
+                onBlocked();
+                return;
+              }
+              finalize();
+            }}
+          >
             Dokončit a podepsat
           </button>
         )}
@@ -401,26 +461,77 @@ function PartyForm({
   title,
   party,
   onChange,
+  enableAres = false,
 }: {
   title: string;
   party: PartyInfo;
   onChange: (p: PartyInfo) => void;
+  enableAres?: boolean;
 }) {
+  const [aresLoading, setAresLoading] = useState(false);
+  const [aresMsg, setAresMsg] = useState<string | null>(null);
+
+  const loadAres = async () => {
+    setAresMsg(null);
+    setAresLoading(true);
+    try {
+      const company = await fetchAresCompany(party.ico || party.idNumber);
+      onChange({
+        ...party,
+        name: company.name,
+        ico: company.ico,
+        dic: company.dic || party.dic,
+        idNumber: company.ico,
+        address: company.address,
+      });
+      setAresMsg(
+        company.source === 'ares'
+          ? 'Údaje načteny z oficiálního ARES API.'
+          : 'ARES nedostupný (CORS/síť) — použit lokální mock. Tip: zkuste IČO 27074358.',
+      );
+    } catch (err) {
+      setAresMsg(err instanceof Error ? err.message : 'Načtení z ARES selhalo.');
+    } finally {
+      setAresLoading(false);
+    }
+  };
+
   return (
     <fieldset className="party-form">
       <legend>{title}</legend>
       <label>
-        Jméno / firma
+        Název firmy / jméno
         <input value={party.name} onChange={(e) => onChange({ ...party, name: e.target.value })} required />
       </label>
       <label>
-        RČ / IČO
+        IČO
+        <div className="ico-row">
+          <input
+            value={party.ico}
+            onChange={(e) => onChange({ ...party, ico: e.target.value, idNumber: e.target.value })}
+            placeholder="např. 27074358"
+            inputMode="numeric"
+          />
+          {enableAres && (
+            <button type="button" className="btn btn--secondary btn--sm" disabled={aresLoading} onClick={() => void loadAres()}>
+              {aresLoading ? 'Načítám…' : 'Načíst z ARES'}
+            </button>
+          )}
+        </div>
+      </label>
+      <label>
+        DIČ
+        <input value={party.dic} onChange={(e) => onChange({ ...party, dic: e.target.value })} placeholder="CZ…" />
+      </label>
+      <label>
+        RČ / jiné ID
         <input value={party.idNumber} onChange={(e) => onChange({ ...party, idNumber: e.target.value })} />
       </label>
       <label>
-        Adresa
+        Adresa sídla
         <textarea rows={3} value={party.address} onChange={(e) => onChange({ ...party, address: e.target.value })} />
       </label>
+      {aresMsg && <p className="ares-msg">{aresMsg}</p>}
     </fieldset>
   );
 }

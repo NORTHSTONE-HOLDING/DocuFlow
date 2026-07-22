@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import { Logo } from './Logo';
+import type { PlanId } from '../types/document';
 
 const NAV = [
   { to: '/', label: 'Nástěnka', icon: 'dashboard' },
   { to: '/novy', label: 'Nový dokument', icon: 'new' },
   { to: '/sablony', label: 'Šablony', icon: 'templates' },
+  { to: '/cenik', label: 'Ceník', icon: 'pricing' },
   { to: '/nastaveni', label: 'Nastavení / Fakturace', icon: 'settings' },
 ] as const;
 
@@ -13,6 +15,13 @@ interface AppShellProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
   onToggleMobile: () => void;
+  planName: string;
+  planId: PlanId;
+  userName: string | null;
+  freeRemaining: number;
+  onOpenLogin: () => void;
+  onOpenSignup: () => void;
+  onSignOut: () => void;
 }
 
 function NavIcon({ name }: { name: (typeof NAV)[number]['icon'] }) {
@@ -39,6 +48,12 @@ function NavIcon({ name }: { name: (typeof NAV)[number]['icon'] }) {
           <path d="M16 4v4h4M9 13h6M9 17h4" strokeLinecap="round" />
         </svg>
       );
+    case 'pricing':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M12 3v18M16 8H9.5a2.5 2.5 0 0 0 0 5H14a2.5 2.5 0 0 1 0 5H7" strokeLinecap="round" />
+        </svg>
+      );
     case 'settings':
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -49,7 +64,19 @@ function NavIcon({ name }: { name: (typeof NAV)[number]['icon'] }) {
   }
 }
 
-export function AppShell({ children, mobileOpen, onCloseMobile, onToggleMobile }: AppShellProps) {
+export function AppShell({
+  children,
+  mobileOpen,
+  onCloseMobile,
+  onToggleMobile,
+  planName,
+  planId,
+  userName,
+  freeRemaining,
+  onOpenLogin,
+  onOpenSignup,
+  onSignOut,
+}: AppShellProps) {
   return (
     <div className="shell">
       <div className="shell__glow shell__glow--a" aria-hidden />
@@ -65,10 +92,10 @@ export function AppShell({ children, mobileOpen, onCloseMobile, onToggleMobile }
           </button>
         </div>
 
-        <div className="premium-badge" title="Lokální enterprise režim">
+        <div className="premium-badge" title="Stav předplatného">
           <span className="premium-badge__dot" />
-          <span>Premium Active</span>
-          <em>Local Storage</em>
+          <span>{planName}</span>
+          <em>{planId === 'free' ? `Zbývá ${freeRemaining === Infinity ? '∞' : freeRemaining}` : 'Active'}</em>
         </div>
 
         <nav className="sidebar__nav" aria-label="Hlavní navigace">
@@ -88,9 +115,29 @@ export function AppShell({ children, mobileOpen, onCloseMobile, onToggleMobile }
           ))}
         </nav>
 
+        <div className="sidebar__auth">
+          {userName ? (
+            <>
+              <p>{userName}</p>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={onSignOut}>
+                Odhlásit
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLogin}>
+                Přihlásit
+              </button>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenSignup}>
+                Registrace
+              </button>
+            </>
+          )}
+        </div>
+
         <div className="sidebar__footer">
-          <p>Enterprise Local Mode</p>
-          <span>Bez serveru · 100 % offline</span>
+          <p>Lokální režim</p>
+          <span>Bez serveru · LocalStorage</span>
         </div>
       </aside>
 
@@ -109,7 +156,7 @@ export function AppShell({ children, mobileOpen, onCloseMobile, onToggleMobile }
           </div>
           <div className="premium-badge premium-badge--mobile">
             <span className="premium-badge__dot" />
-            Premium
+            {planName}
           </div>
         </header>
         <main className="content">{children}</main>

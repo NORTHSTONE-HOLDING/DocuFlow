@@ -1,8 +1,17 @@
-export type TemplateId = 'kupni-smlouva' | 'smlouva-o-dilo' | 'plna-moc' | 'faktura';
+export type TemplateId =
+  | 'kupni-smlouva'
+  | 'smlouva-o-dilo'
+  | 'plna-moc'
+  | 'generalni-plna-moc'
+  | 'faktura'
+  | 'predavaci-protokol'
+  | 'oficialni-dopis';
 
 export interface PartyInfo {
   name: string;
   idNumber: string;
+  ico: string;
+  dic: string;
   address: string;
 }
 
@@ -41,5 +50,22 @@ export interface AppSettings {
   companyEmail: string;
   companyId: string;
   defaultCurrency: 'CZK';
-  darkMode: true;
+  darkMode: boolean;
+}
+
+export type PlanId = 'free' | 'premium' | 'business' | 'enterprise';
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface AuthState {
+  user: AuthUser | null;
+  planId: PlanId;
+  documentsCreated: number;
+  stripeMockCustomerId?: string;
+  upgradedAt?: string;
 }

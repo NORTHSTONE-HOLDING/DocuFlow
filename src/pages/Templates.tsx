@@ -8,14 +8,14 @@ export function Templates() {
         <div>
           <p className="eyebrow">Knihovna</p>
           <h1>Šablony dokumentů</h1>
-          <p className="page__sub">Připravené formální české formuláře pro rychlé spuštění průvodce.</p>
+          <p className="page__sub">Rozšířené formální české formuláře včetně předávacího protokolu a úředních žádostí.</p>
         </div>
       </div>
 
       <div className="template-grid">
         {TEMPLATES.map((t) => (
           <Link key={t.id} to="/novy" className="template-card template-card--link" state={{ templateId: t.id }}>
-            <span className="template-card__badge">Šablona</span>
+            {t.featured && <span className="template-card__badge">Doporučeno</span>}
             <strong>{t.label}</strong>
             <span>{t.description}</span>
             <em className="template-card__cta">Použít šablonu →</em>

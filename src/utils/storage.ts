@@ -11,12 +11,27 @@ const DEFAULT_SETTINGS: AppSettings = {
   darkMode: true,
 };
 
+function normalizeParty(party: DocumentRecord['partyA'] | undefined): DocumentRecord['partyA'] {
+  return {
+    name: party?.name ?? '',
+    idNumber: party?.idNumber ?? '',
+    ico: party?.ico ?? party?.idNumber ?? '',
+    dic: party?.dic ?? '',
+    address: party?.address ?? '',
+  };
+}
+
 export function loadDocuments(): DocumentRecord[] {
   try {
     const raw = localStorage.getItem(DOCS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as DocumentRecord[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((doc) => ({
+      ...doc,
+      partyA: normalizeParty(doc.partyA),
+      partyB: normalizeParty(doc.partyB),
+    }));
   } catch {
     return [];
   }
