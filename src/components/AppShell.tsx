@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { Logo } from './Logo';
 import { PlanSwitcher } from './PlanSwitcher';
+import { AppFooter } from './AppFooter';
 import { useFeatureAccess } from './FeatureGate';
 import { lockBadgeLabel, type FeatureKey } from '../data/features';
+import type { LegalDocId } from '../data/legal';
 import type { PlanId } from '../types/document';
 
 const NAV = [
@@ -28,6 +30,7 @@ interface AppShellProps {
   onOpenSignup: () => void;
   onSignOut: () => void;
   onChangePlan: (planId: PlanId) => void;
+  onOpenLegal: (id: LegalDocId) => void;
   supabaseReady?: boolean;
 }
 
@@ -98,6 +101,7 @@ export function AppShell({
   onOpenSignup,
   onSignOut,
   onChangePlan,
+  onOpenLegal,
   supabaseReady = false,
 }: AppShellProps) {
   const { can, openUpgrade } = useFeatureAccess();
@@ -178,6 +182,20 @@ export function AppShell({
         <div className="sidebar__footer">
           <p>{supabaseReady ? 'Supabase připraven' : 'Lokální / Hybrid režim'}</p>
           <span>{supabaseReady ? 'Cloud auth aktivní' : 'LocalStorage · offline OK'}</span>
+          <nav className="sidebar__legal" aria-label="Právní dokumenty">
+            <button type="button" onClick={() => onOpenLegal('vop')}>
+              VOP
+            </button>
+            <button type="button" onClick={() => onOpenLegal('gdpr')}>
+              GDPR
+            </button>
+            <button type="button" onClick={() => onOpenLegal('consentProcessing')}>
+              Souhlas OÚ
+            </button>
+            <button type="button" onClick={() => onOpenLegal('consentMarketing')}>
+              Obchodní sdělení
+            </button>
+          </nav>
         </div>
       </aside>
 
@@ -203,6 +221,7 @@ export function AppShell({
           </div>
         </header>
         <main className="content">{children}</main>
+        <AppFooter onOpenLegal={onOpenLegal} />
       </div>
     </div>
   );

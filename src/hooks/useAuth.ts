@@ -49,13 +49,25 @@ export function useAuth() {
   }, []);
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string) => {
+    async (
+      name: string,
+      email: string,
+      password: string,
+      consents: { gdpr: boolean; marketing: boolean } = { gdpr: true, marketing: false },
+    ) => {
+      const now = new Date().toISOString();
       const supabase = getSupabase();
       if (supabase) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name } },
+          options: {
+            data: {
+              name,
+              consent_gdpr: consents.gdpr,
+              consent_marketing: consents.marketing,
+            },
+          },
         });
         if (!error && data.user) {
           persist({
@@ -66,12 +78,17 @@ export function useAuth() {
               email,
               createdAt: data.user.created_at || new Date().toISOString(),
             },
+            consents: {
+              gdprAcceptedAt: consents.gdpr ? now : undefined,
+              marketingAccepted: consents.marketing,
+              marketingAcceptedAt: consents.marketing ? now : undefined,
+            },
           });
           return;
         }
       }
       // Offline / mock fallback
-      persist(signUpLocal(name, email, password));
+      persist(signUpLocal(name, email, password, consents));
     },
     [persist],
   );

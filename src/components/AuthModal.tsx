@@ -1,18 +1,39 @@
 import { useEffect, useId, useState } from 'react';
+import type { LegalDocId } from '../data/legal';
+
+export interface SignupConsents {
+  gdpr: boolean;
+  marketing: boolean;
+}
 
 interface AuthModalProps {
   open: boolean;
   mode?: 'login' | 'signup';
   onClose: () => void;
   onSignIn: (email: string, password: string, name?: string) => void | Promise<void>;
-  onSignUp: (name: string, email: string, password: string) => void | Promise<void>;
+  onSignUp: (
+    name: string,
+    email: string,
+    password: string,
+    consents: SignupConsents,
+  ) => void | Promise<void>;
+  onOpenLegal: (id: LegalDocId) => void;
 }
 
-export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }: AuthModalProps) {
+export function AuthModal({
+  open,
+  mode = 'login',
+  onClose,
+  onSignIn,
+  onSignUp,
+  onOpenLegal,
+}: AuthModalProps) {
   const [tab, setTab] = useState<'login' | 'signup'>(mode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [consentGdpr, setConsentGdpr] = useState(false);
+  const [consentMarketing, setConsentMarketing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const id = useId();
 
@@ -20,10 +41,14 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
     if (open) {
       setTab(mode);
       setError(null);
+      setConsentGdpr(false);
+      setConsentMarketing(false);
     }
   }, [open, mode]);
 
   if (!open) return null;
+
+  const registerLocked = tab === 'signup' && !consentGdpr;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +63,14 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
           setError('Zadejte jméno.');
           return;
         }
-        await onSignUp(name.trim(), email.trim(), password);
+        if (!consentGdpr) {
+          setError('Pro registraci je nutný souhlas se zpracováním osobních údajů (GDPR).');
+          return;
+        }
+        await onSignUp(name.trim(), email.trim(), password, {
+          gdpr: true,
+          marketing: consentMarketing,
+        });
       } else {
         await onSignIn(email.trim(), password, name.trim() || undefined);
       }
@@ -50,7 +82,13 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
-      <div className="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal auth-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${id}-title`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal__head">
           <h3 id={`${id}-title`}>DocuFlow účet</h3>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Zavřít">
@@ -58,7 +96,8 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
           </button>
         </div>
         <p className="modal__lead">
-          Přihlášení je lokální (LocalStorage) — ideální pro demo a offline provoz bez backendu.
+          Přihlášení je lokální (LocalStorage) — ideální pro demo a offline provoz bez backendu. Registrace
+          vyžaduje povinný souhlas dle ÚOOÚ / GDPR.
         </p>
 
         <div className="auth-tabs">
@@ -70,7 +109,7 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
           </button>
         </div>
 
-        <form className="modal__form" onSubmit={submit}>
+        <form className="modal__form" onSubmit={(e) => void submit(e)}>
           {tab === 'signup' && (
             <label htmlFor={`${id}-name`}>
               Jméno
@@ -101,13 +140,61 @@ export function AuthModal({ open, mode = 'login', onClose, onSignIn, onSignUp }:
               minLength={4}
             />
           </label>
+
+          {tab === 'signup' && (
+            <div className="auth-consents">
+              <label className="auth-consent">
+                <input
+                  type="checkbox"
+                  checked={consentGdpr}
+                  onChange={(e) => setConsentGdpr(e.target.checked)}
+                  required
+                />
+                <span>
+                  <strong>Povinné:</strong> Souhlasím se zpracováním osobních údajů pro účely plnění smlouvy a
+                  registrace (GDPR).{' '}
+                  <button
+                    type="button"
+                    className="auth-consent__link"
+                    onClick={() => onOpenLegal('consentProcessing')}
+                  >
+                    Zobrazit souhlas
+                  </button>
+                </span>
+              </label>
+              <label className="auth-consent auth-consent--optional">
+                <input
+                  type="checkbox"
+                  checked={consentMarketing}
+                  onChange={(e) => setConsentMarketing(e.target.checked)}
+                />
+                <span>
+                  <strong>Volitelné:</strong> Souhlasím se zasíláním obchodních sdělení, novinek a marketingových
+                  nabídek e-mailem.{' '}
+                  <button
+                    type="button"
+                    className="auth-consent__link"
+                    onClick={() => onOpenLegal('consentMarketing')}
+                  >
+                    Zobrazit souhlas
+                  </button>
+                </span>
+              </label>
+            </div>
+          )}
+
           {error && <div className="alert alert--error">{error}</div>}
           <div className="modal__actions">
             <button type="button" className="btn btn--ghost" onClick={onClose}>
               Zrušit
             </button>
-            <button type="submit" className="btn btn--primary">
-              {tab === 'login' ? 'Přihlásit se' : 'Vytvořit účet'}
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={registerLocked}
+              title={registerLocked ? 'Nejprve potvrďte povinný souhlas se zpracováním osobních údajů' : undefined}
+            >
+              {tab === 'login' ? 'Přihlásit se' : 'Registrovat se'}
             </button>
           </div>
         </form>

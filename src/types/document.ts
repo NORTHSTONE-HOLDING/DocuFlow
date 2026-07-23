@@ -62,10 +62,17 @@ export interface AuthUser {
   createdAt: string;
 }
 
+export interface AuthConsents {
+  gdprAcceptedAt?: string;
+  marketingAccepted: boolean;
+  marketingAcceptedAt?: string;
+}
+
 export interface AuthState {
   user: AuthUser | null;
   planId: PlanId;
   documentsCreated: number;
   stripeMockCustomerId?: string;
   upgradedAt?: string;
+  consents?: AuthConsents;
 }

@@ -3,7 +3,9 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
 import { AuthModal } from './components/AuthModal';
 import { FeatureAccessProvider } from './components/FeatureGate';
+import { LegalModal } from './components/LegalModal';
 import { PaywallModal } from './components/PaywallModal';
+import type { LegalDocId } from './data/legal';
 import { useDocuments, useSettings } from './hooks/useDocuments';
 import { useAuth } from './hooks/useAuth';
 import { useCompanyProfile, useProjects } from './hooks/useErp';
@@ -24,6 +26,7 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDocId | null>(null);
   const location = useLocation();
 
   const { documents, save } = useDocuments();
@@ -76,6 +79,7 @@ export default function App() {
         onOpenSignup={() => openAuth('signup')}
         onSignOut={signOut}
         onChangePlan={upgradePlan}
+        onOpenLegal={setLegalDoc}
         supabaseReady={isSupabaseConfigured()}
       >
         <Routes>
@@ -161,6 +165,7 @@ export default function App() {
           onClose={() => setAuthOpen(false)}
           onSignIn={signIn}
           onSignUp={signUp}
+          onOpenLegal={setLegalDoc}
         />
         <PaywallModal
           open={paywallOpen}
@@ -168,6 +173,7 @@ export default function App() {
           onClose={() => setPaywallOpen(false)}
           onUpgrade={(id) => upgradePlan(id)}
         />
+        <LegalModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
       </AppShell>
     </FeatureAccessProvider>
   );

@@ -30,17 +30,28 @@ export function saveAuth(state: AuthState): void {
   localStorage.setItem(AUTH_KEY, JSON.stringify(state));
 }
 
-export function signUpLocal(name: string, email: string, _password: string): AuthState {
+export function signUpLocal(
+  name: string,
+  email: string,
+  _password: string,
+  consents?: { gdpr: boolean; marketing: boolean },
+): AuthState {
+  const now = new Date().toISOString();
   const user: AuthUser = {
     id: createId(),
     name: name.trim(),
     email: email.trim().toLowerCase(),
-    createdAt: new Date().toISOString(),
+    createdAt: now,
   };
   const prev = loadAuth();
   const next: AuthState = {
     ...prev,
     user,
+    consents: {
+      gdprAcceptedAt: consents?.gdpr ? now : prev.consents?.gdprAcceptedAt,
+      marketingAccepted: Boolean(consents?.marketing),
+      marketingAcceptedAt: consents?.marketing ? now : undefined,
+    },
   };
   saveAuth(next);
   return next;
