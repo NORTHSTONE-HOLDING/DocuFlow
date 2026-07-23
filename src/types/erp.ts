@@ -11,7 +11,7 @@ export type DocKind =
 
 export type WorkflowStage = 1 | 2 | 3 | 4 | 5;
 
-export type DocStatus = 'draft' | 'sent' | 'signed' | 'paid';
+export type DocStatus = 'draft' | 'sent' | 'signed' | 'paid' | 'overdue';
 
 export interface CompanyProfile {
   companyName: string;
@@ -74,6 +74,8 @@ export interface WorkflowDocument {
   signatureClient?: string;
   signedAt?: string;
   paidAt?: string;
+  dueDate?: string;
+  splitPayment?: boolean;
   variableSymbol: string;
 }
 

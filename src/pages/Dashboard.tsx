@@ -8,6 +8,7 @@ import type { CompanyProfile, Project, WorkflowDocument, WorkflowStage } from '.
 import { STAGE_LABELS } from '../types/erp';
 import { formatCurrency, formatDate } from '../utils/format';
 import { createProjectWithQuote } from '../utils/workflow';
+import { isInvoiceOverdue } from '../utils/legalNotices';
 
 interface DashboardProps {
   documentsCountLegacy: number;
@@ -108,13 +109,15 @@ export function Dashboard({
         <div className="project-list">
           {projects.map((p) => {
             const unpaid = findUnpaidInvoice(p, docs);
+            const overdue = unpaid ? isInvoiceOverdue(unpaid) : false;
             return (
-              <article key={p.id} className="project-row">
+              <article key={p.id} className={`project-row ${overdue ? 'project-row--overdue' : ''}`}>
                 <div className="project-row__main">
                   <Link to={`/zakazka/${p.id}`}>
                     <strong>{p.name}</strong>
                   </Link>
                   <span>{p.clientName || 'Bez klienta'}</span>
+                  {overdue && <em className="debt-badge debt-badge--overdue">Po splatnosti</em>}
                   <ol className="mini-pipeline">
                     {stages.map((s) => (
                       <li key={s} className={p.stage >= s ? 'is-on' : ''} title={STAGE_LABELS[s]}>

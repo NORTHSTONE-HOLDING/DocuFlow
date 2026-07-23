@@ -86,6 +86,13 @@ function TemplateIcon({ icon }: { icon: string }) {
           <path d="M12 3v6M8 7a6 6 0 1 0 8 0" strokeLinecap="round" />
         </svg>
       );
+    case 'legal':
+      return (
+        <svg {...common}>
+          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" strokeLinejoin="round" />
+          <path d="M9 12h6M12 9v6" strokeLinecap="round" />
+        </svg>
+      );
     default:
       return (
         <svg {...common}>

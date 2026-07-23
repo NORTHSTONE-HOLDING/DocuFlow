@@ -7,16 +7,18 @@ interface AppFooterProps {
 const LINKS: { id: LegalDocId; label: string }[] = [
   { id: 'vop', label: 'VOP' },
   { id: 'gdpr', label: 'GDPR' },
-  { id: 'consentProcessing', label: 'Souhlas se zpracováním osobních údajů' },
-  { id: 'consentMarketing', label: 'Souhlas se zasíláním obchodních sdělení' },
+  { id: 'consentProcessing', label: 'Souhlas se zpracováním dat' },
+  { id: 'userGuide', label: 'Návod k použití' },
 ];
 
 export function AppFooter({ onOpenLegal }: AppFooterProps) {
   return (
     <footer className="app-footer">
       <div className="app-footer__brand">
-        <strong>DocuFlow</strong>
-        <span>Právní dokumenty · ÚOOÚ / GDPR · Česká republika</span>
+        <strong>DocuFlow Systems s.r.o.</strong>
+        <span>IČO: 4205190 · DIČ: CZ4205190</span>
+        <span>zapsaná u Městského soudu v Praze, sp. zn. C 12345</span>
+        <span className="app-footer__copy">© 2026 DocuFlow Systems s.r.o. Veškerá práva vyhrazena.</span>
       </div>
       <nav className="app-footer__links" aria-label="Právní dokumenty">
         {LINKS.map((link) => (

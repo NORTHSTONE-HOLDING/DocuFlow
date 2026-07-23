@@ -329,17 +329,73 @@ export function ProjectDetail({
               </dd>
             </div>
           </dl>
-          {(doc.kind === 'contract' || doc.kind === 'advance_invoice') && (
-            <label className="advance-field">
-              Záloha %
-              <input
-                type="number"
-                min={10}
-                max={90}
-                value={doc.advancePercent}
-                onChange={(e) => persist({ ...doc, advancePercent: Number(e.target.value) || 40 })}
-              />
-            </label>
+          {(doc.kind === 'contract' || doc.kind === 'advance_invoice' || doc.kind === 'quote') && (
+            <div className="split-payment-box">
+              <label className="checkbox-row split-payment-toggle">
+                <input
+                  type="checkbox"
+                  checked={doc.splitPayment !== false}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    persist({
+                      ...doc,
+                      splitPayment: on,
+                      advancePercent: on ? 40 : 100,
+                    });
+                  }}
+                />
+                Rozdělit platbu na zálohu (40 % záloha · 60 % doplatek)
+              </label>
+              {doc.splitPayment !== false && (
+                <label className="advance-field">
+                  Záloha %
+                  <input
+                    type="number"
+                    min={10}
+                    max={90}
+                    value={doc.advancePercent || 40}
+                    onChange={(e) =>
+                      persist({
+                        ...doc,
+                        splitPayment: true,
+                        advancePercent: Number(e.target.value) || 40,
+                      })
+                    }
+                  />
+                </label>
+              )}
+            </div>
+          )}
+          {(doc.kind === 'advance_invoice' || doc.kind === 'final_invoice') && doc.status !== 'paid' && (
+            <div className="invoice-status-row">
+              <span>
+                Stav:{' '}
+                <strong>
+                  {doc.status === 'overdue'
+                    ? 'Po splatnosti'
+                    : doc.dueDate && new Date(doc.dueDate).getTime() < Date.now()
+                      ? 'Po splatnosti (dle data)'
+                      : doc.status}
+                </strong>
+                {doc.dueDate ? ` · splatnost ${new Date(doc.dueDate).toLocaleDateString('cs-CZ')}` : ''}
+              </span>
+              <button
+                type="button"
+                className="btn btn--debt btn--sm"
+                onClick={() => persist({ ...doc, status: 'overdue' })}
+              >
+                Označit Po splatnosti
+              </button>
+              {doc.status === 'overdue' && (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => persist({ ...doc, status: 'sent' })}
+                >
+                  Zrušit označení
+                </button>
+              )}
+            </div>
           )}
           <label>
             Smluvní / fakturační text

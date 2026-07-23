@@ -18,6 +18,7 @@ import { AiAudit } from './pages/AiAudit';
 import { Profile } from './pages/Profile';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { SignDocument } from './pages/SignDocument';
+import { ViewLegal } from './pages/ViewLegal';
 import type { PlanId } from './types/document';
 import { isSupabaseConfigured } from './utils/supabase';
 
@@ -54,12 +55,14 @@ export default function App() {
     setAuthOpen(true);
   };
 
-  const isSignRoute = location.pathname.startsWith('/sign/');
+  const isPublicDocRoute =
+    location.pathname.startsWith('/sign/') || location.pathname.startsWith('/view-legal/');
 
-  if (isSignRoute) {
+  if (isPublicDocRoute) {
     return (
       <Routes>
         <Route path="/sign/:id" element={<SignDocument />} />
+        <Route path="/view-legal/:id" element={<ViewLegal />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );

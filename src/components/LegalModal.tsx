@@ -45,7 +45,7 @@ export function LegalModal({ docId, onClose }: LegalModalProps) {
             className="btn btn--download"
             onClick={() => downloadLegalDocument(doc.id)}
           >
-            📥 Stáhnout jako dokument (PDF/DOCX)
+            📥 Stáhnout jako dokument
           </button>
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => openLegalPrintView(doc.id)}>
             Tisková verze

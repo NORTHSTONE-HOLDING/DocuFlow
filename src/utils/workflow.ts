@@ -10,6 +10,7 @@ import { createId } from './storage';
 import { nextDocumentNumber, variableSymbolFromNumber } from './numbering';
 import { calculateTotals, remainingItems, scaleItems } from './vat';
 import { newEmptyClient, newLineItem, upsertProject, upsertWorkflowDoc } from './erpStorage';
+import { defaultDueDate } from './legalNotices';
 
 const DEFAULT_TERMS: Record<DocKind, string> = {
   quote:
@@ -109,6 +110,10 @@ function cloneAsKind(
   };
   mutate(doc);
   doc.totals = calculateTotals(doc.items);
+  if (kind === 'advance_invoice' || kind === 'final_invoice') {
+    doc.dueDate = defaultDueDate(doc.createdAt, 14);
+    if (doc.splitPayment === undefined) doc.splitPayment = true;
+  }
 
   const nextProject: Project = {
     ...project,

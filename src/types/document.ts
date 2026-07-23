@@ -5,7 +5,10 @@ export type TemplateId =
   | 'generalni-plna-moc'
   | 'faktura'
   | 'predavaci-protokol'
-  | 'oficialni-dopis';
+  | 'oficialni-dopis'
+  | 'predzalobni-vyzva'
+  | 'trestni-oznameni'
+  | 'uznani-dluhu';
 
 export interface PartyInfo {
   name: string;

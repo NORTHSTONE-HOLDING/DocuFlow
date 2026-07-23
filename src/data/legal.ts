@@ -1,4 +1,4 @@
-export type LegalDocId = 'vop' | 'gdpr' | 'consentProcessing' | 'consentMarketing';
+export type LegalDocId = 'vop' | 'gdpr' | 'consentProcessing' | 'consentMarketing' | 'userGuide';
 
 export interface LegalDocument {
   id: LegalDocId;
@@ -9,9 +9,11 @@ export interface LegalDocument {
   sections: { heading: string; body: string }[];
 }
 
-const CONTROLLER = `Správce osobních údajů:
-NORTHSTONE HOLDING (provozovatel aplikace DocuFlow)
-E-mail kontaktní osoby: podpora@docuflow.cz
+const CONTROLLER = `Provozovatel a správce osobních údajů:
+DocuFlow Systems s.r.o.
+IČO: 4205190 · DIČ: CZ4205190
+zapsaná u Městského soudu v Praze, sp. zn. C 12345
+E-mail: podpora@docuflow.cz
 Účel: poskytování SaaS služeb tvorby a správy obchodních dokumentů.`;
 
 export const LEGAL_DOCUMENTS: LegalDocument[] = [
@@ -172,6 +174,39 @@ Odvolání je účinné bez zbytečného odkladu a nemá vliv na zákonnost zpra
       {
         heading: '5. Potvrzení',
         body: `Zaškrtnutím pole „Souhlasím se zasíláním obchodních sdělení, novinek a marketingových nabídek e-mailem.“ potvrzuji, že jsem se s tímto dokumentem seznámil/a a souhlas uděluji svobodně a informovaně.`,
+      },
+    ],
+  },
+  {
+    id: 'userGuide',
+    title: 'Návod k použití DocuFlow',
+    shortTitle: 'Návod k použití',
+    filename: 'DocuFlow-Navod-k-pouziti',
+    updatedAt: '2026-07-22',
+    sections: [
+      {
+        heading: '1. Úvod',
+        body: `DocuFlow je jednotný ERP a dokumentový workflow pro české OSVČ, řemeslníky a firmy. Tento návod popisuje základní postupy v aplikaci — od registrace přes zakázkový pipeline až po inkasní nástroje.`,
+      },
+      {
+        heading: '2. Profil firmy a registrace',
+        body: `V sekci „Můj Profil / Moje Firma“ vyplňte IČO, DIČ, sídlo a platební údaje. Registrace vyžaduje povinný souhlas se zpracováním osobních údajů (GDPR). Volitelný marketingový souhlas není podmínkou užívání služby.`,
+      },
+      {
+        heading: '3. Zakázkový pipeline',
+        body: `Každá zakázka prochází stavy: 1. Nabídka (CN2026…) → 2. Smlouva (SOD2026…) → 3. Zálohová faktura (F2026…) → 4. Předávací protokol (PP2026…) → 5. Doplatková faktura (F2026…). Použijte tlačítka „One-Click Convert“ pro bezpečný přenos dat mezi dokumenty.`,
+      },
+      {
+        heading: '4. DPH, ARES a platby',
+        body: `V položkách nastavte sazbu DPH 21 %, 12 % nebo 0 % / přenesená daňová povinnost. Přepínač „Rozdělit platbu na zálohu“ nastaví 40 % zálohu a 60 % doplatek. IČO klienta načtěte tlačítkem „Načíst z ARES“. Po podpisu se zobrazí Smart-Faktura s QR Platbou.`,
+      },
+      {
+        heading: '5. AI funkce a inkaso',
+        body: `AI Právní Audit, hlasové zadávání a foto/skica jsou vázány na tarif (viz Ceník). U faktur po splatnosti použijte „🤖 Urgovat neplatiče přes AI“ — v právním režimu odešlete oficiální předžalobní výzvu přes WhatsApp včetně odkazu na dokument.`,
+      },
+      {
+        heading: '6. Podpora',
+        body: `Technická podpora: podpora@docuflow.cz. Provozovatel: DocuFlow Systems s.r.o., IČO 4205190.`,
       },
     ],
   },

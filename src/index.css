@@ -1467,27 +1467,35 @@ input:disabled {
 
 .app-footer {
   margin-top: auto;
-  padding: 1.25rem 2rem 1.75rem;
+  padding: 1.35rem 2rem 1.85rem;
   border-top: 1px solid rgba(16, 185, 129, 0.18);
   display: flex;
   flex-wrap: wrap;
   gap: 1rem 1.5rem;
   align-items: flex-start;
   justify-content: space-between;
-  background: linear-gradient(180deg, transparent, rgba(6, 78, 59, 0.12));
+  background: linear-gradient(180deg, transparent, rgba(6, 78, 59, 0.14));
 }
 .app-footer__brand {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.22rem;
+  max-width: 420px;
 }
 .app-footer__brand strong {
   color: #6ee7b7;
   letter-spacing: -0.01em;
+  font-size: 0.98rem;
 }
 .app-footer__brand span {
   font-size: 0.75rem;
   color: var(--text-dim);
+  line-height: 1.4;
+}
+.app-footer__copy {
+  margin-top: 0.35rem;
+  color: #a7f3d0 !important;
+  font-weight: 600;
 }
 .app-footer__links {
   display: flex;
@@ -3033,6 +3041,173 @@ a.doc-mode-tabs__item:hover {
   color: #dbeafe;
   transform: translateY(-1px);
 }
+.templates-section-title {
+  margin: 0.5rem 0 0.85rem;
+  font-size: 1.05rem;
+  color: #a7f3d0;
+}
+.templates-section-title--inkaso {
+  margin-top: 2rem;
+  color: #fbbf24;
+}
+.template-card__badge--inkaso {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1c1917;
+}
+.split-payment-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(6, 78, 59, 0.2);
+  margin-bottom: 0.75rem;
+}
+.split-payment-toggle {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.invoice-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.5rem 0 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.debt-badge {
+  display: inline-flex;
+  align-items: center;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+.debt-badge--overdue {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #1c1917;
+}
+.project-row--overdue {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+.debt-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  padding: 0.25rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+.debt-mode-tabs button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.55rem 0.4rem;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.debt-mode-tabs button.is-active {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+}
+.debt-mode-tabs button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.debt-legal-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(120, 53, 15, 0.35);
+  font-size: 0.8rem;
+  color: #fde68a;
+  word-break: break-all;
+}
+.debt-legal-banner a {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+.view-legal {
+  min-height: 100vh;
+  padding: 2rem 1.25rem 3rem;
+  max-width: 860px;
+  margin: 0 auto;
+  color: var(--text);
+  background:
+    radial-gradient(800px 400px at 10% 0%, rgba(16, 185, 129, 0.12), transparent 55%),
+    linear-gradient(165deg, #020617, #0f172a 55%, #022c22);
+}
+.view-legal--empty {
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+.view-legal__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.view-legal__head h1 {
+  margin: 0.2rem 0;
+  font-size: 1.45rem;
+}
+.view-legal__head p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.view-legal__paper {
+  border-radius: 16px;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(15, 23, 42, 0.82);
+  padding: 1.35rem 1.4rem 1.6rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.view-legal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+  color: #a7f3d0;
+}
+.view-legal__body {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+.view-legal__footer {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
 .debt-modal {
   width: min(560px, 100%);
 }

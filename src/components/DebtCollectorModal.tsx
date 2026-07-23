@@ -1,7 +1,13 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Project, WorkflowDocument } from '../types/erp';
 import { formatCurrency } from '../utils/format';
 import { buildWhatsAppShareUrl } from '../utils/payments';
+import {
+  buildFormalDebtWhatsAppText,
+  buildSoftDebtReminderText,
+  ensurePredzalobniNotice,
+  isInvoiceOverdue,
+} from '../utils/legalNotices';
 
 interface DebtCollectorModalProps {
   open: boolean;
@@ -10,18 +16,33 @@ interface DebtCollectorModalProps {
   onClose: () => void;
 }
 
-export function buildDebtReminderText(_project: Project, invoice: WorkflowDocument, payLink: string): string {
-  return `Dobrý den, v příloze zakázky ${invoice.number} evidujeme neuhrazenou fakturu na částku ${Math.round(invoice.totals.total)} Kč. Pro hladký průběh prací a odeslání materiálů klikněte na odkaz pro okamžitou platbu přes Apple Pay/QR kód: ${payLink}`;
-}
-
 export function DebtCollectorModal({ open, project, invoice, onClose }: DebtCollectorModalProps) {
+  const overdue = isInvoiceOverdue(invoice);
+  const [mode, setMode] = useState<'soft' | 'legal'>(overdue ? 'legal' : 'soft');
+
+  useEffect(() => {
+    if (open) setMode(overdue ? 'legal' : 'soft');
+  }, [open, overdue]);
+
   const payLink = useMemo(() => `${window.location.origin}/sign/${invoice.id}`, [invoice.id]);
-  const message = useMemo(() => buildDebtReminderText(project, invoice, payLink), [project, invoice, payLink]);
+  const legalUrl = useMemo(() => `${window.location.origin}/view-legal/mock-id`, []);
+
+  const message = useMemo(() => {
+    if (mode === 'legal') {
+      ensurePredzalobniNotice(project, invoice, 'mock-id');
+      return buildFormalDebtWhatsAppText({
+        legalUrl,
+        invoiceNumber: invoice.number,
+        amount: invoice.totals.total,
+      });
+    }
+    return buildSoftDebtReminderText(invoice, payLink);
+  }, [mode, project, invoice, legalUrl, payLink]);
+
   const wa = invoice.client.phone || project.client.phone
     ? buildWhatsAppShareUrl(invoice.client.phone || project.client.phone, invoice.number, payLink)
     : null;
 
-  // Override default WA template with exact reminder text
   const waExact = useMemo(() => {
     const phone = (invoice.client.phone || project.client.phone || '').replace(/\D/g, '');
     if (!phone) return null;
@@ -51,14 +72,44 @@ export function DebtCollectorModal({ open, project, invoice, onClose }: DebtColl
           <span>{project.name}</span>
           <span>{invoice.number}</span>
           <strong>{formatCurrency(invoice.totals.total)}</strong>
+          {overdue ? <em className="debt-badge debt-badge--overdue">Po splatnosti</em> : <em className="debt-badge">Neuhrazeno</em>}
+        </div>
+
+        <div className="debt-mode-tabs" role="tablist" aria-label="Režim vymáhání">
+          <button
+            type="button"
+            role="tab"
+            className={mode === 'soft' ? 'is-active' : ''}
+            onClick={() => setMode('soft')}
+          >
+            Zdvořilá připomínka
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={mode === 'legal' ? 'is-active' : ''}
+            disabled={!overdue}
+            title={overdue ? undefined : 'Právní režim se odemkne u faktur Po splatnosti'}
+            onClick={() => overdue && setMode('legal')}
+          >
+            Formální právní režim WhatsApp
+          </button>
         </div>
 
         <p className="modal__lead">
-          Chytrá, zdvořilá a profesionální připomínka platby v češtině — připravená k odeslání na WhatsApp.
+          {mode === 'legal'
+            ? 'Neúprosná oficiální předžalobní výzva s odkazem na dokument v inkasním rejstříku.'
+            : 'Chytrá, zdvořilá a profesionální připomínka platby v češtině — připravená k odeslání na WhatsApp.'}
         </p>
 
+        {mode === 'legal' && (
+          <div className="debt-legal-banner">
+            Dokument: <a href={legalUrl} target="_blank" rel="noreferrer">{legalUrl}</a>
+          </div>
+        )}
+
         <label className="debt-modal__label">
-          Text připomínky
+          Text {mode === 'legal' ? 'právní výzvy' : 'připomínky'}
           <textarea rows={7} readOnly value={message} />
         </label>
 
@@ -68,16 +119,21 @@ export function DebtCollectorModal({ open, project, invoice, onClose }: DebtColl
           </button>
           {waExact || wa ? (
             <a className="btn btn--whatsapp" href={waExact || wa!} target="_blank" rel="noreferrer">
-              Odeslat připomínku na WhatsApp
+              {mode === 'legal' ? 'Odeslat předžalobní výzvu na WhatsApp' : 'Odeslat připomínku na WhatsApp'}
             </a>
           ) : (
             <button type="button" className="btn btn--whatsapp" disabled title="Doplňte telefon klienta v zakázce">
-              Odeslat připomínku na WhatsApp
+              Odeslat na WhatsApp
             </button>
           )}
         </div>
         {!invoice.client.phone && !project.client.phone && (
           <p className="debt-modal__hint">Doplňte telefon klienta v detailu zakázky (+420), aby šlo odeslat WhatsApp.</p>
+        )}
+        {!overdue && (
+          <p className="debt-modal__hint">
+            Tip: označte fakturu jako „Po splatnosti“ v detailu zakázky pro odemčení formálního právního režimu.
+          </p>
         )}
       </div>
     </div>

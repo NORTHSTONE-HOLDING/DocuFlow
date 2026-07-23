@@ -190,10 +190,10 @@ export function AppShell({
               GDPR
             </button>
             <button type="button" onClick={() => onOpenLegal('consentProcessing')}>
-              Souhlas OÚ
+              Souhlas se zpracováním dat
             </button>
-            <button type="button" onClick={() => onOpenLegal('consentMarketing')}>
-              Obchodní sdělení
+            <button type="button" onClick={() => onOpenLegal('userGuide')}>
+              Návod k použití
             </button>
           </nav>
         </div>
