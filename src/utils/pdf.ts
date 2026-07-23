@@ -23,7 +23,7 @@ export function buildDocumentHtml(doc: DocumentRecord): string {
     ">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;border-bottom:2px solid #10B981;padding-bottom:16px;">
         <div>
-          <div style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #10B981; font-weight: 700;">DocuFlow</div>
+          <div style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #10B981; font-weight: 700;">PaperFlow</div>
           <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Elektronický dokument · Lokální režim</div>
         </div>
         <div style="text-align:right;font-size:12px;color:#64748b;">
@@ -77,7 +77,7 @@ export function buildDocumentHtml(doc: DocumentRecord): string {
       </div>
 
       <p style="margin-top:40px;font-size:11px;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:12px;">
-        Dokument vygenerován v DocuFlow · Premium Active · Enterprise Local Storage
+        Dokument vygenerován v PaperFlow · Premium Active · Enterprise Local Storage
       </p>
     </div>
   `;
@@ -139,9 +139,9 @@ export function printDocument(doc: DocumentRecord): void {
 }
 
 export function openMailto(email: string, doc: DocumentRecord): void {
-  const subject = encodeURIComponent(`DocuFlow: ${doc.name}`);
+  const subject = encodeURIComponent(`PaperFlow: ${doc.name}`);
   const body = encodeURIComponent(
-    `Dobrý den,\n\nv příloze / odkazu naleznete dokument „${doc.name}" (${doc.templateLabel}).\nKlient: ${doc.clientName}\nHodnota: ${formatCurrency(doc.price)}\nDatum: ${formatDateLong(doc.createdAt)}\n\nDokument byl připraven v DocuFlow (lokální Premium Active režim).\n\nS pozdravem`,
+    `Dobrý den,\n\nv příloze / odkazu naleznete dokument „${doc.name}" (${doc.templateLabel}).\nKlient: ${doc.clientName}\nHodnota: ${formatCurrency(doc.price)}\nDatum: ${formatDateLong(doc.createdAt)}\n\nDokument byl připraven v PaperFlow (lokální Premium Active režim).\n\nS pozdravem`,
   );
   window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
 }

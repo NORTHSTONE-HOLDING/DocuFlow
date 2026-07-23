@@ -51,7 +51,7 @@ export function SignDocument() {
           <h1>Dokument nenalezen</h1>
           <p>Odkaz pro podpis je neplatný nebo dokument byl smazán.</p>
           <button type="button" className="btn btn--primary" onClick={() => navigate('/')}>
-            Zpět do DocuFlow
+            Zpět do PaperFlow
           </button>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function SignDocument() {
   return (
     <div className="sign-page">
       <div className="sign-card">
-        <div className="sign-brand">DocuFlow · Digitální podpis</div>
+        <div className="sign-brand">PaperFlow · Digitální podpis</div>
         <h1>
           {KIND_LABELS[doc.kind]} {doc.number}
         </h1>
@@ -215,7 +215,7 @@ export function SignDocument() {
               {doc.paidAt ? ` (${new Date(doc.paidAt).toLocaleString('cs-CZ')})` : ''}.
             </p>
             <button type="button" className="btn btn--primary" onClick={() => navigate('/')}>
-              Otevřít DocuFlow
+              Otevřít PaperFlow
             </button>
           </div>
         )}

@@ -14,7 +14,7 @@ export function ViewLegal() {
         <h1>Dokument nenalezen</h1>
         <p>Právní dokument s tímto identifikátorem neexistuje nebo byl odstraněn.</p>
         <Link to="/" className="btn btn--primary">
-          Zpět do DocuFlow
+          Zpět do PaperFlow
         </Link>
       </div>
     );
@@ -25,7 +25,7 @@ export function ViewLegal() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `DocuFlow-${notice.templateId}-${notice.id}.txt`;
+    a.download = `PaperFlow-${notice.templateId}-${notice.id}.txt`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -58,7 +58,7 @@ export function ViewLegal() {
       </article>
 
       <footer className="view-legal__footer">
-        <p>DocuFlow Systems s.r.o. · IČO 4205190 · DIČ CZ4205190 · © 2026</p>
+        <p>PaperFlow Systems s.r.o. · IČO 4205190 · DIČ CZ4205190 · © 2026</p>
         <Link to="/" className="btn btn--ghost btn--sm">
           Otevřít aplikaci
         </Link>

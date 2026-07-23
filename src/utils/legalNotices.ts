@@ -2,7 +2,7 @@ import type { Project, WorkflowDocument } from '../types/erp';
 import { formatCurrency } from './format';
 import { getTemplate } from '../data/templates';
 
-const KEY = 'docuflow_legal_notices_v1';
+const KEY = 'paperflow_legal_notices_v1';
 
 export type InkasoTemplateId = 'predzalobni-vyzva' | 'trestni-oznameni' | 'uznani-dluhu';
 
@@ -122,7 +122,7 @@ function buildMockPredzalobni(): LegalNotice {
     body: `${template.defaultTerms}
 
 ———
-Ukázkový dokument DocuFlow (mock-id)
+Ukázkový dokument PaperFlow (mock-id)
 Dlužná částka: 25 000 Kč
 Číslo faktury: F2026001
 Variabilní symbol: 2026001
@@ -131,7 +131,7 @@ Variabilní symbol: 2026001
     clientName: 'Ukázkový dlužník',
     invoiceNumber: 'F2026001',
     amount: 25000,
-    supplierName: 'DocuFlow Systems s.r.o.',
+    supplierName: 'PaperFlow Systems s.r.o.',
   };
 }
 

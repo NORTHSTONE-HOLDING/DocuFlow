@@ -1,11 +1,11 @@
 import type { AppSettings, DocumentRecord } from '../types/document';
 
-const DOCS_KEY = 'docuflow_documents_v1';
-const SETTINGS_KEY = 'docuflow_settings_v1';
+const DOCS_KEY = 'paperflow_documents_v1';
+const SETTINGS_KEY = 'paperflow_settings_v1';
 
 const DEFAULT_SETTINGS: AppSettings = {
-  companyName: 'DocuFlow Enterprise',
-  companyEmail: 'dokumenty@docuflow.cz',
+  companyName: 'PaperFlow Enterprise',
+  companyEmail: 'dokumenty@paperflow.cz',
   companyId: 'IČO 12345678',
   defaultCurrency: 'CZK',
   darkMode: true,

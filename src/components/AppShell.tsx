@@ -210,7 +210,7 @@ export function AppShell({
           </button>
           <div className="topbar__brand">
             <Logo compact />
-            <span className="topbar__title">DocuFlow</span>
+            <span className="topbar__title">PaperFlow</span>
           </div>
           <div className="topbar__plan">
             <PlanSwitcher planId={planId} onChange={onChangePlan} compact />

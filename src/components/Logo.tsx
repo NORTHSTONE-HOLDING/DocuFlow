@@ -4,7 +4,7 @@ interface LogoProps {
 
 export function Logo({ compact = false }: LogoProps) {
   return (
-    <div className={`logo ${compact ? 'logo--compact' : ''}`} aria-label="DocuFlow">
+    <div className={`logo ${compact ? 'logo--compact' : ''}`} aria-label="PaperFlow">
       <svg
         className="logo__icon"
         viewBox="0 0 40 40"
@@ -49,7 +49,7 @@ export function Logo({ compact = false }: LogoProps) {
       </svg>
       {!compact && (
         <span className="logo__text">
-          Docu<span>Flow</span>
+          Paper<span>Flow</span>
         </span>
       )}
     </div>

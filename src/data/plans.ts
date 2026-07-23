@@ -19,7 +19,7 @@ export const PLANS: SubscriptionPlan[] = [
     name: 'Free',
     priceCzk: 0,
     period: 'měsíc',
-    tagline: 'Vyzkoušejte DocuFlow zdarma',
+    tagline: 'Vyzkoušejte PaperFlow zdarma',
     documentLimit: 3,
     features: [
       '3 dokumenty zdarma',

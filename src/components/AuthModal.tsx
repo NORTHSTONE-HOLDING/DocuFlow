@@ -90,7 +90,7 @@ export function AuthModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal__head">
-          <h3 id={`${id}-title`}>DocuFlow účet</h3>
+          <h3 id={`${id}-title`}>PaperFlow účet</h3>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Zavřít">
             ×
           </button>

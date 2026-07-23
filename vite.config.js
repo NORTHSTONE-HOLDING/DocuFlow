@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 
 /**
- * DocuFlow Vite config
+ * PaperFlow Vite config
  * - React plugin for JSX/TSX
  * - Host binding via `vite --host` (see package.json scripts)
  * - SPA history fallback for client-side routes
