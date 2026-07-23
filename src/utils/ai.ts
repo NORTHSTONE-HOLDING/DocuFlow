@@ -91,7 +91,7 @@ function buildSimulation(prompt: string, currentTerms: string): AiSuggestion {
 async function callOpenAi(prompt: string, currentTerms: string): Promise<AiSuggestion> {
   const apiKey = String(import.meta.env.VITE_OPENAI_API_KEY).trim();
   const system = [
-    'Jsi právně zaměřený asistent pro české obchodní smlouvy v aplikaci DocuFlow.',
+    'Jsi právně zaměřený asistent pro české obchodní smlouvy v aplikaci PaperFlow.',
     'Odpovídej výhradně česky, formálním právním stylem vhodným do smlouvy.',
     'Vrať POUZE JSON objekt ve tvaru: {"mode":"append"|"rewrite","text":"...","note":"..."}',
     'mode=append: nový odstavec k doplnění; mode=rewrite: přepracovaný poslední odstavec.',

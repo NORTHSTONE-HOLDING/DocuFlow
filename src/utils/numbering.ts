@@ -1,6 +1,6 @@
 import type { DocKind, NumberingState } from '../types/erp';
 
-const KEY = 'docuflow_numbering_v1';
+const KEY = 'paperflow_numbering_v1';
 export const NUMBERING_YEAR = 2026;
 
 const DEFAULT: NumberingState = {

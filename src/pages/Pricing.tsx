@@ -37,7 +37,7 @@ export function Pricing({ currentPlanId, onUpgrade, isLoggedIn, onOpenAuth }: Pr
       <div className="page__header">
         <div>
           <p className="eyebrow">Ceník</p>
-          <h1>Tarify DocuFlow</h1>
+          <h1>Tarify PaperFlow</h1>
           <p className="page__sub">
             Transparentní měsíční plány v CZK. Upgrade probíhá přes simulovaný Stripe checkout (lokálně).
           </p>

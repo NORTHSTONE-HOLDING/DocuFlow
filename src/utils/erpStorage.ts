@@ -1,9 +1,9 @@
 import type { CompanyProfile, Project, WorkflowDocument } from '../types/erp';
 import { createId } from './storage';
 
-const PROJECTS_KEY = 'docuflow_projects_v1';
-const WORKFLOW_DOCS_KEY = 'docuflow_workflow_docs_v1';
-const PROFILE_KEY = 'docuflow_company_profile_v1';
+const PROJECTS_KEY = 'paperflow_projects_v1';
+const WORKFLOW_DOCS_KEY = 'paperflow_workflow_docs_v1';
+const PROFILE_KEY = 'paperflow_company_profile_v1';
 
 export const DEFAULT_COMPANY_PROFILE: CompanyProfile = {
   companyName: '',

@@ -24,7 +24,7 @@ export function openLegalPrintView(id: LegalDocId): void {
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
-  <title>${escapeHtml(doc.title)} · DocuFlow</title>
+  <title>${escapeHtml(doc.title)} · PaperFlow</title>
   <style>
     body { font-family: "Source Serif 4", Georgia, serif; max-width: 720px; margin: 2rem auto; padding: 0 1.25rem; color: #0f172a; line-height: 1.55; }
     h1 { font-size: 1.45rem; color: #065f46; }

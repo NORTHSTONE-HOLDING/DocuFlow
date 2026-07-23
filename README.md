@@ -1,4 +1,4 @@
-# DocuFlow
+# PaperFlow
 
 Prémiové české ERP + document workflow pro OSVČ, řemeslníky a firmy.
 Běží kompletně v prohlížeči (LocalStorage) s hybridní přípravou na Supabase a OpenAI.

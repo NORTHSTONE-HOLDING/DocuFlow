@@ -15,10 +15,10 @@ export function AppFooter({ onOpenLegal }: AppFooterProps) {
   return (
     <footer className="app-footer">
       <div className="app-footer__brand">
-        <strong>DocuFlow Systems s.r.o.</strong>
+        <strong>PaperFlow Systems s.r.o.</strong>
         <span>IČO: 4205190 · DIČ: CZ4205190</span>
         <span>zapsaná u Městského soudu v Praze, sp. zn. C 12345</span>
-        <span className="app-footer__copy">© 2026 DocuFlow Systems s.r.o. Veškerá práva vyhrazena.</span>
+        <span className="app-footer__copy">© 2026 PaperFlow Systems s.r.o. Veškerá práva vyhrazena.</span>
       </div>
       <nav className="app-footer__links" aria-label="Právní dokumenty">
         {LINKS.map((link) => (

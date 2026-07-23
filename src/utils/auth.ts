@@ -1,7 +1,7 @@
 import type { AuthState, AuthUser, PlanId } from '../types/document';
 import { createId } from './storage';
 
-const AUTH_KEY = 'docuflow_auth_v1';
+const AUTH_KEY = 'paperflow_auth_v1';
 
 const DEFAULT_AUTH: AuthState = {
   user: null,
@@ -57,7 +57,7 @@ export function signUpLocal(
   return next;
 }
 
-export function signInLocal(email: string, _password: string, nameFallback = 'Uživatel DocuFlow'): AuthState {
+export function signInLocal(email: string, _password: string, nameFallback = 'Uživatel PaperFlow'): AuthState {
   const prev = loadAuth();
   if (prev.user && prev.user.email === email.trim().toLowerCase()) {
     return prev;
