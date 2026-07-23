@@ -49,7 +49,7 @@ export function Logo({ compact = false }: LogoProps) {
       </svg>
       {!compact && (
         <span className="logo__text">
-          Docu<span>Flow</span>
+          Paper<span>Flow</span>
         </span>
       )}
     </div>
